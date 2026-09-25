@@ -39,7 +39,16 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <a
+              href="/Denish_Adhikari_CV.docx"
+              download="Denish_Adhikari_CV_2026.docx"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary text-xs font-semibold hover:border-accent transition-colors"
+            >
+              <Download className="w-3.5 h-3.5 text-accent" />
+              <span className="hidden sm:inline">DOCX</span>
+            </a>
+
             <button
               onClick={handlePrint}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent text-white text-xs font-semibold hover:bg-accent-soft transition-colors shadow-md shadow-accent/20"
@@ -104,26 +113,26 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
             <div className="space-y-3 text-xs">
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-bold text-text-primary">Bachelor in Civil Engineering</div>
+                  <div className="font-bold text-text-primary text-sm">Bachelor in Civil Engineering</div>
                   <div className="text-text-secondary">Lumbini Engineering, Management and Science College, Pokhara University</div>
                 </div>
-                <div className="text-right font-mono text-text-muted">Sep 2018 – Feb 2024</div>
+                <div className="text-right font-mono text-text-muted">Sep 2018 A.D. – Feb 2024 A.D.</div>
               </div>
 
               <div className="flex justify-between items-start">
                 <div>
-                  <div className="font-bold text-emerald-400">Nepal Engineering Council (NEC)</div>
-                  <div className="text-text-secondary">Official Registered Civil Engineer License</div>
+                  <div className="font-bold text-emerald-400 text-sm">Nepal Engineering Council (NEC)</div>
+                  <div className="text-text-secondary">Registered Civil Engineer (Reg. No. 79422 &quot;Civil&quot;)</div>
                 </div>
-                <div className="text-right font-mono text-text-muted">Oct 23, 2024 A.D.</div>
+                <div className="text-right font-mono text-text-muted">October 23, 2024 A.D.</div>
               </div>
 
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-bold text-text-primary">+2 / High School (Science)</div>
-                  <div className="text-text-secondary">Tilottama Secondary School, Rupandehi</div>
+                  <div className="text-text-secondary">Tilottama Secondary School</div>
                 </div>
-                <div className="text-right font-mono text-text-muted">Completed 2018</div>
+                <div className="text-right font-mono text-text-muted">Completed: 2018 A.D.</div>
               </div>
 
               <div className="flex justify-between items-start">
@@ -131,7 +140,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
                   <div className="font-bold text-text-primary">School Leaving Certificate (SLC)</div>
                   <div className="text-text-secondary">Bethel English Boarding Secondary School</div>
                 </div>
-                <div className="text-right font-mono text-text-muted">Completed 2016</div>
+                <div className="text-right font-mono text-text-muted">Completed: 2016 A.D.</div>
               </div>
             </div>
           </div>
@@ -167,19 +176,31 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
           {/* Technical Skills */}
           <div className="space-y-2">
             <h2 className="text-xs font-mono text-accent uppercase font-bold tracking-widest border-b border-border/80 pb-1">
-              TECHNICAL SKILLS &amp; COMPETENCIES
+              TECHNICAL SKILLS
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-text-secondary">
               <div>• Construction Site Supervision – RCC Structures</div>
               <div>• Surveying – Total Station and Auto Level</div>
               <div>• Setting Out and Structural Alignment</div>
-              <div>• Reinforcement Inspection &amp; BBS Verification</div>
-              <div>• Concrete Testing &amp; Aggregate Sieve Analysis</div>
-              <div>• Quantity Estimation &amp; BOQ Preparation</div>
-              <div>• AutoCAD 2D Drafting &amp; Detailing</div>
-              <div>• Microsoft Office (Advanced Excel, Word)</div>
-              <div>• Leadership &amp; Workforce Coordination (40–50)</div>
-              <div>• Technical Problem Solving &amp; Safety Compliance</div>
+              <div>• Reinforcement Inspection and BBS Verification</div>
+              <div>• Concrete Testing and Aggregate Analysis</div>
+              <div>• Quantity Estimation &amp; Material Takeoffs</div>
+              <div>• AutoCAD 2D Drafting</div>
+              <div>• Microsoft Office (Excel, Word)</div>
+            </div>
+          </div>
+
+          {/* Core Competencies */}
+          <div className="space-y-2">
+            <h2 className="text-xs font-mono text-accent uppercase font-bold tracking-widest border-b border-border/80 pb-1">
+              CORE COMPETENCIES
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-text-secondary">
+              <div>• Leadership and Team Coordination (40–50 Laborers)</div>
+              <div>• Problem Solving and Critical Thinking</div>
+              <div>• Attention to Technical Detail &amp; Drawing Verification</div>
+              <div>• Time Management &amp; Daily Progress Reporting</div>
+              <div>• Communication Skills &amp; Multi-trade Coordination</div>
             </div>
           </div>
 
@@ -189,8 +210,13 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
               INTERESTS
             </h2>
             <p className="text-xs text-text-secondary">
-              Football &amp; Futsal • Cricket • Hiking and Outdoor Activities • Engineering Volunteering
+              Football &amp; Futsal • Cricket • Hiking and Outdoor Activities • Volunteering
             </p>
+          </div>
+
+          {/* Footer info */}
+          <div className="pt-4 border-t border-border/60 text-right text-[11px] font-mono text-text-muted">
+            Prepared on 24th June 2026 A.D.
           </div>
         </div>
 

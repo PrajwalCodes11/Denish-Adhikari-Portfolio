@@ -24,7 +24,7 @@ export const educationData: EducationItem[] = [
     degree: "Bachelor in Civil Engineering",
     institution: "Lumbini Engineering, Management and Science College (Pokhara University)",
     location: "Rupandehi / Pokhara University, Nepal",
-    period: "September 2018 – February 2024",
+    period: "September 2018 A.D. to February 2024 A.D.",
     highlights: [
       "Core coursework: Structural Analysis, Design of RCC Structures, Surveying I & II, Fluid Mechanics, Soil Mechanics & Foundation Engineering, Highway & Transportation Engineering, Estimation & Costing",
       "Survey Camp: 10-day comprehensive field surveying camp covering closed theodolite traverse, leveling, contouring, and road alignment layout",

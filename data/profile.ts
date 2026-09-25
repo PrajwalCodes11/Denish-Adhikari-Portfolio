@@ -40,7 +40,7 @@ export const profileData: ProfileData = {
   linkedin: "https://www.linkedin.com/in/denish-adhikari/",
   github: "https://github.com/JholeyCodes",
   bioSummary:
-    "I am a licensed Civil Engineer from Nepal (NEC Registered) with proven experience supervising heavy RCC construction, Total Station and Auto Level setting out, and structural compliance. Having coordinated 40–50 site laborers at Sarathi Construction on wastewater infrastructure, I bridge the gap between design drawings, structural integrity, and day-to-day site execution.",
+    "Civil Engineer with practical experience in wastewater treatment plant construction, reinforced concrete works, surveying, and construction quality control. Skilled in Total Station and Auto Level operations, reinforcement inspection, concrete testing, and site supervision. Capable of managing workforce activities, verifying structural drawings, and maintaining technical compliance on construction sites. Seeking opportunities in construction engineering and site operations.",
   bioQuote:
     "Designing and executing safe, compliant, and durable infrastructure where technical precision and structural safety come first.",
   workforceCount: "40–50+",
@@ -50,17 +50,17 @@ export const profileData: ProfileData = {
     {
       degree: "Bachelor in Civil Engineering",
       institution: "Lumbini Engineering, Management and Science College, Pokhara University",
-      period: "Sep 2018 – Feb 2024",
+      period: "September 2018 A.D. to February 2024 A.D.",
     },
     {
-      degree: "Higher Secondary (+2 Science)",
+      degree: "+2 / High School (Science)",
       institution: "Tilottama Secondary School, Rupandehi",
-      period: "Completed 2018",
+      period: "Completed: 2018 A.D.",
     },
     {
       degree: "School Leaving Certificate (SLC)",
       institution: "Bethel English Boarding Secondary School",
-      period: "Completed 2016",
+      period: "Completed: 2016 A.D.",
     },
   ],
 };

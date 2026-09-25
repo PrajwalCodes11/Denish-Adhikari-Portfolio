@@ -7,8 +7,8 @@ export const siteData = {
     "phone": "+977 9867730557",
     "email": "den.adh0709@gmail.com",
     "location": "Kathmandu, Nepal",
-    "shortBio": "Civil Engineer with hands-on site experience in wastewater treatment plant construction, reinforced concrete (RCC) works, precision surveying, and structural quality control.",
-    "fullBio": "I am a licensed Civil Engineer from Nepal (NEC Registered) with proven experience supervising heavy RCC construction, Total Station and Auto Level setting out, and structural compliance. Having coordinated 40–50 site laborers at Sarathi Construction on wastewater infrastructure, I bridge the gap between design drawings, structural integrity, and day-to-day site execution.",
+    "shortBio": "Civil Engineer with practical experience in wastewater treatment plant construction, reinforced concrete works, surveying, and construction quality control.",
+    "fullBio": "Civil Engineer with practical experience in wastewater treatment plant construction, reinforced concrete works, surveying, and construction quality control. Skilled in Total Station and Auto Level operations, reinforcement inspection, concrete testing, and site supervision. Capable of managing workforce activities, verifying structural drawings, and maintaining technical compliance on construction sites. Seeking opportunities in construction engineering and site operations.",
     "philosophy": "Designing and executing safe, compliant, and durable infrastructure where technical precision and structural safety come first.",
     "rotatingRoles": [
       "Civil Site Engineer",
