@@ -1,6 +1,6 @@
 export const siteData = {
   "personal": {
-    "name": "Engineer  Denish Adhikari ",
+    "name": "Er. Denish Adhikari",
     "role": "Civil Site Engineer & Surveyor",
     "license": "Nepal Engineering Council (NEC)",
     "licenseDate": "October 23, 2024 A.D.",
