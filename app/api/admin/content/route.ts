@@ -178,7 +178,7 @@ export const galleryData: GalleryItem[] = ${JSON.stringify(gallery, null, 2)};\n
     let gitHubSynced = false;
     let gitHubError = null;
     const token = clientToken || process.env.GITHUB_TOKEN || process.env.GITHUB_PAT;
-    const repoOwner = process.env.GITHUB_REPO_OWNER || "JholeyCodes";
+    const repoOwner = process.env.GITHUB_REPO_OWNER || "PrajwalCodes11";
     const repoName = process.env.GITHUB_REPO_NAME || "Denish-Adhikari-Portfolio";
 
     if (token) {

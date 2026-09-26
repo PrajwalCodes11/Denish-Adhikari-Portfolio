@@ -571,13 +571,25 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setStatusMessage({
-          text: data.message || "Edits successfully applied and synchronized across the website!",
-          type: "success",
-        });
+        if (data.gitHubSynced) {
+          setStatusMessage({
+            text: "Success! Changes committed directly to GitHub (PrajwalCodes11/Denish-Adhikari-Portfolio). Vercel is now rebuilding the public website (~30 seconds)!",
+            type: "success",
+          });
+        } else if (data.gitHubError) {
+          setStatusMessage({
+            text: "Saved in this browser! Note: GitHub publish failed (" + data.gitHubError + "). Check token in Sync tab.",
+            type: "error",
+          });
+        } else {
+          setStatusMessage({
+            text: "Saved in your browser session! To publish globally for all visitors across the world, connect your GitHub Token in the 'Sync' tab.",
+            type: "success",
+          });
+        }
       } else {
         setStatusMessage({
-          text: "Edits applied to your live session! (Backend notice: " + (data.error || "Saved locally") + ")",
+          text: "Edits applied to your browser session! (" + (data.error || "Saved locally") + ")",
           type: "success",
         });
       }
@@ -2332,7 +2344,7 @@ export default function AdminPage() {
                     GitHub Personal Access Token (PAT)
                   </h4>
                   <p className="text-xs text-text-muted">
-                    Allows this admin console to commit updated data directly to <code className="text-accent">JholeyCodes/Denish-Adhikari-Portfolio</code> on branch <code className="text-accent">main</code>, triggering automatic Vercel redeployment.
+                    Allows this admin console to commit updated data directly to <code className="text-accent">PrajwalCodes11/Denish-Adhikari-Portfolio</code> on branch <code className="text-accent">main</code>, triggering automatic Vercel redeployment.
                   </p>
                 </div>
               </div>
