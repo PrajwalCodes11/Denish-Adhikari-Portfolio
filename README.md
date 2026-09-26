@@ -16,7 +16,7 @@
 - **Live Production URL:** [https://denish-adhikari-portfolio.vercel.app/](https://denish-adhikari-portfolio.vercel.app/)
 - **Engineering Admin Console:** [https://denish-adhikari-portfolio.vercel.app/admin](https://denish-adhikari-portfolio.vercel.app/admin)
 - **Printable ATS Resume:** [https://denish-adhikari-portfolio.vercel.app/resume](https://denish-adhikari-portfolio.vercel.app/resume)
-- **Source Code:** [https://github.com/JholeyCodes/Denish-Adhikari-Portfolio](https://github.com/JholeyCodes/Denish-Adhikari-Portfolio)
+- **Source Code:** [https://github.com/PrajwalCodes11/Denish-Adhikari-Portfolio](https://github.com/PrajwalCodes11/Denish-Adhikari-Portfolio)
 
 ---
 
