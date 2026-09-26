@@ -33,7 +33,7 @@ export default function Home() {
         {/* About Section */}
         <AboutSection onOpenResume={() => setResumeOpen(true)} />
 
-        {/* Selected Projects (Filterable Grid + Case Studies) */}
+        {/* Selected Civil Projects (Consolidated Flagship & Key Works) */}
         <ProjectsSection />
 
         {/* Professional Experience (Vertical Timeline) */}

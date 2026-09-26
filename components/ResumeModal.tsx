@@ -159,6 +159,11 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
                     <span className="text-text-secondary text-xs block sm:inline sm:ml-2">
                       – {exp.company}, {exp.location}
                     </span>
+                    {exp.company.includes("Sarathi") && (
+                      <div className="text-xs font-mono text-accent font-semibold mt-0.5">
+                        Project: Construction of Wastewater Treatment Plant at Sallaghari, Kodku and Dhobighat
+                      </div>
+                    )}
                   </div>
                   <span className="font-mono text-xs text-accent font-semibold">{exp.period}</span>
                 </div>

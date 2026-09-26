@@ -4,16 +4,17 @@ import React, { useState } from "react";
 import { MapPin, Navigation, ExternalLink } from "lucide-react";
 
 export const NepalMapSection: React.FC = () => {
-  const [selectedHub, setSelectedHub] = useState<string>("kathmandu");
+  const [selectedHub, setSelectedHub] = useState<string>("bhaktapur");
 
   const hubs = [
     {
-      id: "kathmandu",
-      name: "Kathmandu Valley & Tokha",
+      id: "bhaktapur",
+      name: "Bhaktapur & Kathmandu Valley",
       region: "Bagmati Province",
       projects: [
-        "Tokha Wastewater Treatment Plant (Sarathi Construction)",
-        "Residential Municipal Approvals & Detailing (Ujyalo Consultancy)",
+        "Construction of Wastewater Treatment Plant at Sallaghari, Kodku and Dhobighat (Sarathi Construction)",
+        "Heavy RCC Water-Retaining Tanks, Bored Piling & Total Station Alignment",
+        "Materials Quality Control, Concrete Cube Testing & Aggregate Analysis",
       ],
       x: "54%",
       y: "56%",
@@ -24,7 +25,7 @@ export const NepalMapSection: React.FC = () => {
       region: "Gandaki Province",
       projects: [
         "Pokhara University Civil Engineering Degree",
-        "Geodetic Survey Camp & Highway Alignment",
+        "Geodetic Survey Camp & Highway Alignment Traversing",
       ],
       x: "42%",
       y: "52%",
@@ -84,28 +85,28 @@ export const NepalMapSection: React.FC = () => {
               <line x1="500" y1="100" x2="500" y2="400" stroke="#F97316" strokeWidth="0.5" strokeDasharray="6 6" strokeOpacity="0.2"/>
               <line x1="700" y1="100" x2="700" y2="400" stroke="#F97316" strokeWidth="0.5" strokeDasharray="6 6" strokeOpacity="0.2"/>
 
-              {/* Hub 1: Kathmandu */}
+              {/* Hub 1: Bhaktapur / Kathmandu Valley */}
               <g
                 className="cursor-pointer group focus:outline-none"
                 role="button"
                 tabIndex={0}
-                aria-label="View Kathmandu projects and site operations"
-                onClick={() => setSelectedHub("kathmandu")}
+                aria-label="View Bhaktapur and Kathmandu Valley projects and site operations"
+                onClick={() => setSelectedHub("bhaktapur")}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    setSelectedHub("kathmandu");
+                    setSelectedHub("bhaktapur");
                   }
                 }}
               >
-                <circle cx="520" cy="225" r="22" fill="#F97316" fillOpacity="0.15" />
-                <circle cx="520" cy="225" r="10" fill="#F97316" className="animate-pulse" />
-                <circle cx="520" cy="225" r="4" fill="#FFFFFF" />
-                <text x="535" y="222" fill="#F8FAFC" fontFamily="sans-serif" fontSize="13" fontWeight="bold">
-                  Kathmandu
+                <circle cx="525" cy="225" r="22" fill="#F97316" fillOpacity="0.15" />
+                <circle cx="525" cy="225" r="10" fill="#F97316" className="animate-pulse" />
+                <circle cx="525" cy="225" r="4" fill="#FFFFFF" />
+                <text x="540" y="222" fill="#F8FAFC" fontFamily="sans-serif" fontSize="13" fontWeight="bold">
+                  Bhaktapur &amp; Valley
                 </text>
-                <text x="535" y="238" fill="#F97316" fontFamily="monospace" fontSize="10">
-                  Tokha WWTP Site
+                <text x="540" y="238" fill="#F97316" fontFamily="monospace" fontSize="10">
+                  WWTP Sallaghari, Kodku &amp; Dhobighat
                 </text>
               </g>
 
@@ -205,7 +206,7 @@ export const NepalMapSection: React.FC = () => {
                 href="#projects"
                 className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-surface-light border border-border text-xs font-mono font-bold text-text-primary hover:border-accent hover:text-accent transition-colors"
               >
-                <span>View Full Projects Section</span>
+                <span>View Major Projects &amp; Field Records</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>

@@ -13,9 +13,9 @@ export const experienceData: ExperienceItem[] = [
     period: "2024 — PRESENT",
     role: "Civil Site Engineer / Surveyor",
     company: "Sarathi Construction Private Limited",
-    location: "Tokha-07, Kathmandu, Nepal",
+    location: "Sallaghari (Bhaktapur), Kodku & Dhobighat (Lalitpur), Nepal",
     description:
-      "Leading on-site engineering execution, setting out, and quality control on heavy reinforced concrete wastewater treatment plant units, tanks, and underground pipeline installations.",
+      "Leading on-site engineering execution, setting out, and quality control on the Construction of Wastewater Treatment Plant at Sallaghari, Kodku and Dhobighat — covering heavy reinforced concrete tanks, deep bored piling, and underground pipeline installations.",
     achievements: [
       "Performed setting out, leveling, and structural alignment for RCC tanks, foundations, and pipeline works using Total Station and Auto Level.",
       "Supervised excavation, PCC, RCC slab, and wall concreting activities following structural drawings and specifications.",

@@ -82,10 +82,22 @@ export async function POST(request: NextRequest) {
   challenges: string[];
   solutions: string[];
   outcomes: string[];
+  phases?: {
+    phaseNumber: string;
+    title: string;
+    category?: string;
+    summary: string;
+    keyTasks: string[];
+    toolsUsed: string[];
+    image?: string;
+  }[];
   drawings: {
     title: string;
     description: string;
     type: string;
+    image?: string;
+    sheetNo?: string;
+    scale?: string;
   }[];
   sitePhotos: {
     caption: string;

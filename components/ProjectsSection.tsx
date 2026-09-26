@@ -25,7 +25,10 @@ export const ProjectsSection: React.FC = () => {
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
 
   const activeProjects = data?.projectsData || staticProjects;
-  const categories = ["ALL", "INFRASTRUCTURE", "BUILDINGS", "SURVEYING", "ACADEMIC"];
+  const categories = useMemo(() => {
+    const cats = Array.from(new Set(activeProjects.map((p) => p.category)));
+    return cats.length > 1 ? ["ALL", ...cats] : ["ALL", ...cats];
+  }, [activeProjects]);
 
   // Category counts
   const categoryCounts = useMemo(() => {
@@ -70,13 +73,13 @@ export const ProjectsSection: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
           <div>
             <p className="text-xs font-mono uppercase text-accent font-semibold tracking-widest">
-              CASE STUDIES // PRACTICAL EVIDENCE
+              MAJOR CIVIL INFRASTRUCTURE // FIELD CASE STUDY
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-text-primary mt-2">
-              Selected Projects
+              Major Engineering Project
             </h2>
-            <p className="text-sm sm:text-base text-text-secondary mt-2 max-w-xl">
-              A selection of academic, professional and field-based engineering work demonstrating hands-on structural and surveying execution.
+            <p className="text-sm sm:text-base text-text-secondary mt-2 max-w-2xl">
+              Consolidated municipal wastewater treatment infrastructure program covering precision surveying, deep bored piling, dewatering, heavy water-retaining RCC tanks, and material quality assurance.
             </p>
           </div>
         </div>
@@ -166,7 +169,7 @@ export const ProjectsSection: React.FC = () => {
               No matching projects found
             </h3>
             <p className="text-xs text-text-secondary max-w-md mx-auto">
-              No engineering records matched your filter or search query &ldquo;{searchQuery || selectedCategory}&rdquo;. Try another term like &ldquo;ETABS&rdquo;, &ldquo;Tokha&rdquo;, or &ldquo;Piling&rdquo;.
+              No engineering records matched your filter or search query &ldquo;{searchQuery || selectedCategory}&rdquo;. Try another term like &ldquo;ETABS&rdquo;, &ldquo;Sallaghari&rdquo;, or &ldquo;Piling&rdquo;.
             </p>
             <button
               onClick={() => {
@@ -179,7 +182,7 @@ export const ProjectsSection: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className={filteredProjects.length === 1 ? "max-w-4xl mx-auto w-full" : "grid grid-cols-1 md:grid-cols-2 gap-8"}>
             {filteredProjects.map((proj) => (
               <div
                 key={proj.id}
@@ -200,9 +203,16 @@ export const ProjectsSection: React.FC = () => {
 
                   {/* Category & Number Badges */}
                   <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                    <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-[#0B0F14]/90 text-accent border border-border backdrop-blur-md">
-                      {proj.category}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold px-3 py-1 rounded-full bg-[#0B0F14]/90 text-accent border border-border backdrop-blur-md">
+                        {proj.category}
+                      </span>
+                      {proj.phases && (
+                        <span className="font-mono text-[10px] font-semibold px-2.5 py-1 rounded-full bg-[#0B0F14]/90 text-emerald-400 border border-emerald-500/40 backdrop-blur-md">
+                          {proj.phases.length} Phases
+                        </span>
+                      )}
+                    </div>
                     <span className="font-mono text-xl font-extrabold text-white/90 drop-shadow-md">
                       {proj.number}
                     </span>
@@ -235,6 +245,28 @@ export const ProjectsSection: React.FC = () => {
                     <p className="text-xs sm:text-sm text-text-secondary leading-relaxed line-clamp-2">
                       {proj.summary}
                     </p>
+
+                    {/* Sub-items / Phases Breakdown */}
+                    {proj.phases && (
+                      <div className="pt-2 pb-1 space-y-1.5">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-bold block">
+                          Consolidated Phases &amp; Sub-Works:
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                          {proj.phases.map((ph) => (
+                            <div
+                              key={ph.phaseNumber}
+                              className="flex items-center gap-1.5 text-[11px] font-mono text-text-secondary bg-surface-light/60 px-2 py-1 rounded border border-border/60"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
+                              <span className="truncate">
+                                Phase {ph.phaseNumber}: {ph.title.split("&")[0].trim()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Tools & Tech Chips */}

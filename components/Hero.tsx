@@ -93,7 +93,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResume }) => {
                 href="#projects"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-accent text-white font-semibold text-sm hover:bg-accent-soft transition-all shadow-xl shadow-accent/25 hover:shadow-accent/40 group"
               >
-                <span>Explore Projects</span>
+                <span>Explore Major Projects</span>
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
 
@@ -137,7 +137,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResume }) => {
                         Sarathi Construction Pvt. Ltd.
                       </p>
                       <p className="text-sm font-bold text-text-primary">
-                        Tokha WWTP &amp; RCC Tanks
+                        WWTP Sallaghari, Kodku &amp; Dhobighat
                       </p>
                     </div>
                     <div className="text-right font-mono text-xs text-text-secondary">

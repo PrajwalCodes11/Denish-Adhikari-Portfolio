@@ -11,7 +11,7 @@ interface CaseStudyModalProps {
 }
 
 export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, onClose }) => {
-  const [activeTab, setActiveTab] = useState<"overview" | "approach" | "drawings" | "photos">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "phases" | "approach" | "drawings" | "photos">("overview");
   const [zoomedImage, setZoomedImage] = useState<{ src: string; caption: string } | null>(null);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, onClose
         <div className="flex items-center gap-2 px-6 pt-3 border-b border-border bg-surface/50 overflow-x-auto">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all ${
+            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
               activeTab === "overview"
                 ? "border-accent text-accent"
                 : "border-transparent text-text-muted hover:text-text-primary"
@@ -84,35 +84,47 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, onClose
           >
             01 Overview &amp; Role
           </button>
+          {project.phases && project.phases.length > 0 && (
+            <button
+              onClick={() => setActiveTab("phases")}
+              className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
+                activeTab === "phases"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-text-muted hover:text-text-primary"
+              }`}
+            >
+              02 Work Phases ({project.phases.length})
+            </button>
+          )}
           <button
             onClick={() => setActiveTab("approach")}
-            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all ${
+            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
               activeTab === "approach"
                 ? "border-accent text-accent"
                 : "border-transparent text-text-muted hover:text-text-primary"
             }`}
           >
-            02 Approach &amp; Solutions
+            03 Approach &amp; Solutions
           </button>
           <button
             onClick={() => setActiveTab("drawings")}
-            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all ${
+            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
               activeTab === "drawings"
                 ? "border-accent text-accent"
                 : "border-transparent text-text-muted hover:text-text-primary"
             }`}
           >
-            03 Drawings &amp; Specs
+            04 Drawings &amp; CAD ({project.drawings.length})
           </button>
           <button
             onClick={() => setActiveTab("photos")}
-            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all ${
+            className={`pb-3 px-3 text-xs font-mono font-semibold uppercase tracking-wider border-b-2 transition-all shrink-0 ${
               activeTab === "photos"
                 ? "border-accent text-accent"
                 : "border-transparent text-text-muted hover:text-text-primary"
             }`}
           >
-            04 Site Records
+            05 Site Records
           </button>
         </div>
 
@@ -253,26 +265,157 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, onClose
             </div>
           )}
 
+          {/* TAB: PHASES & SUB-TASKS */}
+          {activeTab === "phases" && project.phases && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="space-y-2">
+                <h4 className="text-xs font-mono text-accent uppercase font-bold tracking-widest">
+                  PROJECT BREAKDOWN // EXECUTION PHASES &amp; SUB-TASKS
+                </h4>
+                <p className="text-xs text-text-muted">
+                  Detailed structural stages executed under direct engineering and surveying supervision.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {project.phases.map((phase) => (
+                  <div
+                    key={phase.phaseNumber}
+                    className="p-5 rounded-xl bg-surface border border-border space-y-4 shadow-lg hover:border-accent/60 transition-colors"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border/60">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-lg bg-accent/15 text-accent font-mono text-xs font-extrabold flex items-center justify-center shrink-0 border border-accent/30">
+                          {phase.phaseNumber}
+                        </span>
+                        <div>
+                          <span className="text-[10px] font-mono text-accent font-semibold uppercase tracking-wider block">
+                            {phase.category || "ENGINEERING WORK PACKAGE"}
+                          </span>
+                          <h5 className="text-base font-bold text-text-primary mt-0.5">
+                            {phase.title}
+                          </h5>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                      {phase.summary}
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                      <div className={phase.image ? "md:col-span-8 space-y-2.5" : "md:col-span-12 space-y-2.5"}>
+                        <p className="text-[11px] font-mono uppercase text-text-muted font-bold">
+                          Key Tasks &amp; Quality Checks:
+                        </p>
+                        <div className="space-y-2">
+                          {phase.keyTasks.map((task, tIdx) => (
+                            <div key={tIdx} className="flex items-start gap-2.5 text-xs text-text-secondary">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                              <span className="leading-relaxed">{task}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {phase.toolsUsed && phase.toolsUsed.length > 0 && (
+                          <div className="pt-2 flex flex-wrap gap-1.5 items-center">
+                            <span className="text-[10px] font-mono text-text-muted mr-1">Tools / Machinery:</span>
+                            {phase.toolsUsed.map((tool) => (
+                              <span
+                                key={tool}
+                                className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-light border border-border/60 text-text-muted"
+                              >
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {phase.image && (
+                        <div
+                          onClick={() => setZoomedImage({ src: phase.image!, caption: `${phase.title} (Phase ${phase.phaseNumber})` })}
+                          className="md:col-span-4 relative aspect-[16/10] rounded-xl overflow-hidden bg-surface-dark border border-border cursor-pointer group shrink-0"
+                        >
+                          <Image
+                            src={phase.image}
+                            alt={phase.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 300px"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-accent/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#0B0F14]/90 text-white text-[10px] font-mono">
+                              <Maximize2 className="w-3 h-3 text-accent" />
+                              Inspect Phase
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* TAB 3: DRAWINGS & DOCUMENTATION */}
           {activeTab === "drawings" && (
             <div className="space-y-6 animate-in fade-in">
               <div className="space-y-2">
                 <h4 className="text-xs font-mono text-accent uppercase font-bold tracking-widest">
-                  08 — TECHNICAL DRAWINGS &amp; CAD LAYOUTS
+                  TECHNICAL DRAWINGS &amp; CAD LAYOUTS
                 </h4>
                 <p className="text-xs text-text-muted">
-                  Engineering documentation verified and executed on-site.
+                  Engineering documentation, 2D process schematics, and 3D structural models verified and executed on-site. Click any drawing to expand high-resolution view.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {project.drawings.map((draw, i) => (
-                  <div key={i} className="p-4 rounded-xl bg-surface border border-border space-y-2">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-light text-text-muted uppercase">
-                      {draw.type}
-                    </span>
-                    <h5 className="text-sm font-bold text-text-primary">{draw.title}</h5>
-                    <p className="text-xs text-text-secondary leading-relaxed">{draw.description}</p>
+                  <div
+                    key={i}
+                    className="p-4 rounded-xl bg-surface border border-border flex flex-col justify-between space-y-3 group hover:border-accent transition-colors shadow-lg"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-light text-accent font-semibold uppercase">
+                          {draw.type}
+                        </span>
+                        {draw.sheetNo && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-dark border border-border text-text-muted">
+                            {draw.sheetNo}
+                          </span>
+                        )}
+                      </div>
+                      <h5 className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors">
+                        {draw.title}
+                      </h5>
+                      <p className="text-xs text-text-secondary leading-relaxed">
+                        {draw.description}
+                      </p>
+                    </div>
+
+                    {draw.image && (
+                      <div
+                        onClick={() => setZoomedImage({ src: draw.image!, caption: `${draw.title} – ${draw.sheetNo || draw.type}` })}
+                        className="relative aspect-[16/10] w-full rounded-lg overflow-hidden bg-surface-dark border border-border/80 cursor-pointer group/img"
+                      >
+                        <Image
+                          src={draw.image}
+                          alt={draw.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-cover group-hover/img:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-accent/20 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0B0F14]/90 text-white text-xs font-mono border border-accent">
+                            <Maximize2 className="w-3.5 h-3.5 text-accent" />
+                            Zoom Technical Drawing
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

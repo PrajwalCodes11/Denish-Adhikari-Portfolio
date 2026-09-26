@@ -1573,7 +1573,7 @@ export default function AdminPage() {
                     id: `g-${Date.now()}`,
                     title: "New Site Inspection Record",
                     category: "CONSTRUCTION",
-                    location: "Tokha Site, Kathmandu",
+                    location: "Sallaghari WWTP, Bhaktapur",
                     date: "Ongoing Phase",
                     caption: "Photographic inspection of reinforcement and concrete placement.",
                     image: "/images/site/site-12.jpg",

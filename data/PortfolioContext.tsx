@@ -45,9 +45,12 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        const hasConsolidatedWWTP =
+          Array.isArray(parsed.projectsData) &&
+          parsed.projectsData.some((p: any) => p.id === "wwtp-sallaghari-kodku-dhobighat");
         setData({
           siteData: parsed.siteData || defaultSiteData,
-          projectsData: Array.isArray(parsed.projectsData) ? parsed.projectsData : defaultProjectsData,
+          projectsData: hasConsolidatedWWTP ? parsed.projectsData : defaultProjectsData,
           experienceData: Array.isArray(parsed.experienceData) ? parsed.experienceData : defaultExperienceData,
           galleryData: Array.isArray(parsed.galleryData) ? parsed.galleryData : defaultGalleryData,
           skillsData: Array.isArray(parsed.skillsData) ? parsed.skillsData : defaultSkillsData,

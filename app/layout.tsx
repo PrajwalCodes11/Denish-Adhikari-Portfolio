@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     "Auto Level",
     "RCC Tank Construction",
     "Sarathi Construction",
-    "Tokha Wastewater Treatment Plant",
+    "Construction of Wastewater Treatment Plant at Sallaghari, Kodku and Dhobighat",
     "Nepal Engineering Council",
     "ETABS Seismic Design",
   ],

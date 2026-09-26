@@ -18,7 +18,7 @@
   <rect width="800" height="500" fill="url(#tankGrid)"/>
 
   <!-- Construction Title Header -->
-  <text x="40" y="50" fill="#F97316" font-family="monospace" font-weight="bold" font-size="14" letter-spacing="2">PROJECT 01 // TOKHA-07, KATHMANDU</text>
+  <text x="40" y="50" fill="#F97316" font-family="monospace" font-weight="bold" font-size="14" letter-spacing="2">PROJECT 01 // SALLAGHARI, BHAKTAPUR</text>
   <text x="40" y="80" fill="#F8FAFC" font-family="sans-serif" font-weight="bold" font-size="24">Wastewater Treatment Plant RCC Tank Complex</text>
   <text x="40" y="105" fill="#A7B0BD" font-family="sans-serif" font-size="13">Contractor: Sarathi Construction Pvt. Ltd. • Lead Site Engineer: Er. Denish Adhikari</text>
 

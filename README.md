@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/NEC%20License-No.%2079422%20Civil-emerald?style=for-the-badge&logo=civicwork&logoColor=white)](https://nec.gov.np)
 [![Security](https://img.shields.io/badge/Admin%202FA-Resend%20OTP-0284c7?style=for-the-badge&logo=shield&logoColor=white)](https://resend.com)
 
-> Official engineering portfolio, technical field records, and administrative console for **Er. Denish Adhikari**, licensed Civil Engineer registered with the **Nepal Engineering Council (NEC Reg. No. 79422 "Civil")**. Specialized in municipal wastewater treatment infrastructure (Tokha WWTP), heavy reinforced concrete (RCC) execution, precision surveying (Total Station & Auto Level), and seismic structural compliance (NBC 105:2020 & IS codes).
+> Official engineering portfolio, technical field records, and administrative console for **Er. Denish Adhikari**, licensed Civil Engineer registered with the **Nepal Engineering Council (NEC Reg. No. 79422 "Civil")**. Specialized in municipal wastewater treatment infrastructure (Construction of Wastewater Treatment Plant at Sallaghari, Kodku and Dhobighat), heavy reinforced concrete (RCC) execution, precision surveying (Total Station & Auto Level), and seismic structural compliance (NBC 105:2020 & IS codes).
 
 ---
 
@@ -25,8 +25,8 @@
 ### 1. Client-Facing Portfolio
 | Feature | Description |
 | :--- | :--- |
-| **Field Case Studies** | Comprehensive documentation of real-world civil engineering projects, including the Tokha Wastewater Treatment Plant (RCC clarifiers, aeration tanks, 40–50 labor force management) and Deep Bored Cast-in-Situ Piling. |
-| **Interactive Nepal Map** | Vector-based SVG geographic visualization marking project execution locations across Kathmandu, Tokha, Pokhara, Gandaki Province, and Bagmati Province. |
+| **Field Case Studies** | Comprehensive documentation of real-world civil engineering projects, including the Construction of Wastewater Treatment Plant at Sallaghari, Kodku and Dhobighat (RCC clarifiers, aeration tanks, deep bored piling, 40–50 labor force management) and technical drawings. |
+| **Interactive Nepal Map** | Vector-based SVG geographic visualization marking project execution locations across Bhaktapur, Kathmandu Valley, Pokhara, Gandaki Province, and Lumbini Province. |
 | **Category-Filtered Projects** | Dynamic filtering covering Infrastructure, Buildings, Surveying, and Academic Capstone with instantaneous keyword search. |
 | **Construction & Survey Records** | High-resolution photographic site records documenting excavation, rebar cage fabrication, concreting, and Total Station instrument setups. |
 | **Dedicated ATS Digital Resume** | Standalone `/resume` route with `@media print` styling for 1-click PDF generation and municipal compliance dossiers. |

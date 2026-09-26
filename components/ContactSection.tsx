@@ -334,7 +334,7 @@ ${formData.phone ? `• Phone: ${formData.phone}\n` : ""}• Scope: ${formData.m
                       type="text"
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                      placeholder="e.g. 4-Story Residential Building at Tokha, Kathmandu"
+                      placeholder="e.g. RCC Structure or Municipal Infrastructure Project"
                       className="w-full px-4 py-3 rounded-xl bg-surface-dark border border-border focus:border-accent focus:outline-none text-xs sm:text-sm text-text-primary transition-colors"
                     />
                   </div>
