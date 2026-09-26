@@ -59,7 +59,26 @@ export async function POST(request: NextRequest) {
     }
 
     if (Array.isArray(projects)) {
-      const content = `export interface ProjectCaseStudy {
+      const content = `export interface ProjectPhase {
+  phaseNumber: string;
+  title: string;
+  category?: string;
+  summary: string;
+  keyTasks: string[];
+  toolsUsed: string[];
+  image?: string;
+}
+
+export interface ProjectDrawing {
+  title: string;
+  description: string;
+  type: string;
+  image?: string;
+  sheetNo?: string;
+  scale?: string;
+}
+
+export interface ProjectCaseStudy {
   id: string;
   slug: string;
   number: string;
@@ -84,23 +103,8 @@ export async function POST(request: NextRequest) {
   challenges: string[];
   solutions: string[];
   outcomes: string[];
-  phases?: {
-    phaseNumber: string;
-    title: string;
-    category?: string;
-    summary: string;
-    keyTasks: string[];
-    toolsUsed: string[];
-    image?: string;
-  }[];
-  drawings: {
-    title: string;
-    description: string;
-    type: string;
-    image?: string;
-    sheetNo?: string;
-    scale?: string;
-  }[];
+  phases?: ProjectPhase[];
+  drawings: ProjectDrawing[];
   sitePhotos: {
     caption: string;
     stage: string;

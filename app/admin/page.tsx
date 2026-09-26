@@ -38,16 +38,141 @@ import {
   Sliders,
   Search,
   MessageSquare,
+  X,
+  Camera,
+  Ruler,
 } from "lucide-react";
 
 import { siteData as defaultSiteData } from "@/data/siteData";
-import { ProjectCaseStudy, projectsData as defaultProjects } from "@/data/projects";
+import { ProjectCaseStudy, ProjectPhase, ProjectDrawing, projectsData as defaultProjects } from "@/data/projects";
 import { ExperienceItem, experienceData as defaultExperience } from "@/data/experience";
 import { SkillCategory, skillsData as defaultSkills } from "@/data/skills";
 import { GalleryItem, galleryData as defaultGallery } from "@/data/gallery";
 import { STORAGE_KEY, UPDATE_EVENT, DATA_VERSION, BROADCAST_CHANNEL } from "@/data/PortfolioContext";
 
 type TabKey = "profile" | "projects" | "experience" | "gallery" | "skills" | "inbox" | "media" | "sync";
+
+interface MediaAssetItem {
+  path: string;
+  name: string;
+  category: "site" | "drawings" | "profile" | "schematics";
+  categoryLabel: string;
+}
+
+// Complete Catalog of all Media Assets across the project (site photos 1-46, drawings, profiles, schematics)
+const mediaAssetsList: MediaAssetItem[] = [
+  // 46 High-Resolution Construction Site Photos
+  ...Array.from({ length: 46 }, (_, i) => {
+    const num = String(i + 1).padStart(2, "0");
+    return {
+      path: `/images/site/site-${num}.jpg`,
+      name: `site-${num}.jpg`,
+      category: "site" as const,
+      categoryLabel: "Site Photography",
+    };
+  }),
+  // Technical Drawings & CAD Layouts
+  {
+    path: "/images/2d-drawing-sallaghari.jpeg",
+    name: "2d-drawing-sallaghari.jpeg",
+    category: "drawings",
+    categoryLabel: "2D Engineering CAD Layout",
+  },
+  {
+    path: "/images/wastewater-treatment-plan.jpg",
+    name: "wastewater-treatment-plan.jpg",
+    category: "drawings",
+    categoryLabel: "WWTP Hydraulic & Process Plan",
+  },
+  // Profile & Professional Portraits
+  {
+    path: "/images/profile/profile-1.jpg",
+    name: "profile-1.jpg",
+    category: "profile",
+    categoryLabel: "Site PPE Portrait",
+  },
+  {
+    path: "/images/profile/profile-2.jpg",
+    name: "profile-2.jpg",
+    category: "profile",
+    categoryLabel: "Field Supervision Portrait",
+  },
+  {
+    path: "/images/engineer-portrait.svg",
+    name: "engineer-portrait.svg",
+    category: "profile",
+    categoryLabel: "CAD Vector Portrait",
+  },
+  // CAD Schematics & QA Vectors
+  {
+    path: "/images/project-wwtp.svg",
+    name: "project-wwtp.svg",
+    category: "schematics",
+    categoryLabel: "WWTP Hydraulic Schematic",
+  },
+  {
+    path: "/images/project-residential.svg",
+    name: "project-residential.svg",
+    category: "schematics",
+    categoryLabel: "RCC Structural Frame",
+  },
+  {
+    path: "/images/project-structural.svg",
+    name: "project-structural.svg",
+    category: "schematics",
+    categoryLabel: "Shear Wall Rebar Detail",
+  },
+  {
+    path: "/images/project-survey.svg",
+    name: "project-survey.svg",
+    category: "schematics",
+    categoryLabel: "Total Station Grid",
+  },
+  {
+    path: "/images/gallery-survey-1.svg",
+    name: "gallery-survey-1.svg",
+    category: "schematics",
+    categoryLabel: "Survey Alignment Vector",
+  },
+  {
+    path: "/images/gallery-rebar-1.svg",
+    name: "gallery-rebar-1.svg",
+    category: "schematics",
+    categoryLabel: "Rebar Inspection Vector",
+  },
+  {
+    path: "/images/gallery-formwork-1.svg",
+    name: "gallery-formwork-1.svg",
+    category: "schematics",
+    categoryLabel: "Formwork Shuttering Vector",
+  },
+  {
+    path: "/images/gallery-qc-1.svg",
+    name: "gallery-qc-1.svg",
+    category: "schematics",
+    categoryLabel: "Slump Cone QC Vector",
+  },
+  {
+    path: "/images/gallery-sieve-1.svg",
+    name: "gallery-sieve-1.svg",
+    category: "schematics",
+    categoryLabel: "Sieve Analysis Vector",
+  },
+  {
+    path: "/images/gallery-level-1.svg",
+    name: "gallery-level-1.svg",
+    category: "schematics",
+    categoryLabel: "Auto Level Vector",
+  },
+  {
+    path: "/og-image.png",
+    name: "og-image.png",
+    category: "schematics",
+    categoryLabel: "Social Share Card",
+  },
+];
+
+const availableImages = mediaAssetsList.map((m) => m.path);
 
 interface ContactInquiry {
   id: string;
@@ -96,31 +221,26 @@ export default function AdminPage() {
   // GitHub Sync & Settings
   const [githubToken, setGithubToken] = useState("");
 
-  // Modals & Sub-states
+  // Project Modal & Sub-states
   const [editingProject, setEditingProject] = useState<ProjectCaseStudy | null>(null);
+  const [projectModalTab, setProjectModalTab] = useState<
+    "info" | "facts" | "phases" | "drawings" | "photos" | "technical"
+  >("info");
   const [isNewProject, setIsNewProject] = useState(false);
   const [newRoleInput, setNewRoleInput] = useState("");
-  const [mediaPickerTarget, setMediaPickerTarget] = useState<"project" | "gallery" | null>(null);
 
-  // Available Built-In Site Media Assets
-  const availableImages = [
-    "/images/site/site-24.jpg",
-    "/images/site/site-44.jpg",
-    "/images/site/site-09.jpg",
-    "/images/site/site-12.jpg",
-    "/images/site/site-15.jpg",
-    "/images/site/site-18.jpg",
-    "/images/site/site-21.jpg",
-    "/images/site/site-27.jpg",
-    "/images/site/site-30.jpg",
-    "/images/site/site-33.jpg",
-    "/images/site/site-36.jpg",
-    "/images/site/site-39.jpg",
-    "/images/site/site-42.jpg",
-    "/images/site/site-45.jpg",
-    "/images/profile/profile-1.jpg",
-    "/images/profile/profile-2.jpg",
-  ];
+  // Universal Media Picker Modal State
+  const [mediaPicker, setMediaPicker] = useState<{
+    isOpen: boolean;
+    title: string;
+    onSelect: (path: string) => void;
+  } | null>(null);
+  const [mediaPickerCategory, setMediaPickerCategory] = useState<string>("ALL");
+  const [mediaPickerSearch, setMediaPickerSearch] = useState<string>("");
+
+  // Media Tab Browser State
+  const [mediaTabCategory, setMediaTabCategory] = useState<string>("ALL");
+  const [mediaTabSearch, setMediaTabSearch] = useState<string>("");
 
   // 1. Initial Authentication Check & Load
   useEffect(() => {
@@ -799,15 +919,6 @@ export default function AdminPage() {
             </Link>
 
             <button
-              onClick={handleForceSync}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/40 hover:border-accent text-xs font-semibold text-accent hover:bg-accent/25 transition-all"
-              title="Synchronize Admin and Public Portfolio simultaneously"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-accent" />
-              <span>Sync All Simultaneously</span>
-            </button>
-
-            <button
               onClick={handleExportBackup}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface border border-border hover:border-accent text-xs font-semibold text-text-secondary hover:text-text-primary transition-all"
               title="Download full JSON backup of portfolio"
@@ -833,12 +944,12 @@ export default function AdminPage() {
               {saveLoading ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Saving...</span>
+                  <span>Saving &amp; Publishing...</span>
                 </>
               ) : (
                 <>
                   <Save className="w-3.5 h-3.5" />
-                  <span>Save &amp; Apply Edits</span>
+                  <span>Save &amp; Publish Changes</span>
                 </>
               )}
             </button>
@@ -1303,11 +1414,13 @@ export default function AdminPage() {
                     challenges: ["Water table fluctuations during deep excavation."],
                     solutions: ["Installed dewatering submersible pump network."],
                     outcomes: ["Achieved 100% structural tolerance compliance."],
+                    phases: [],
                     drawings: [],
                     sitePhotos: [],
                   };
                   setEditingProject(newProj);
                   setIsNewProject(true);
+                  setProjectModalTab("info");
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent hover:bg-accent-soft text-white text-xs font-semibold shadow-lg shadow-accent/20 transition-all"
               >
@@ -1480,8 +1593,21 @@ export default function AdminPage() {
                       {/* Edit Button */}
                       <button
                         onClick={() => {
-                          setEditingProject({ ...proj });
+                          setEditingProject({
+                            ...proj,
+                            tools: proj.tools || [],
+                            facts: proj.facts || [],
+                            phases: proj.phases || [],
+                            drawings: proj.drawings || [],
+                            sitePhotos: proj.sitePhotos || [],
+                            responsibilities: proj.responsibilities || [],
+                            technicalApproach: proj.technicalApproach || [],
+                            challenges: proj.challenges || [],
+                            solutions: proj.solutions || [],
+                            outcomes: proj.outcomes || [],
+                          });
                           setIsNewProject(false);
+                          setProjectModalTab("info");
                         }}
                         className="p-2 rounded-lg bg-surface-dark hover:bg-accent/10 border border-border hover:border-accent text-text-secondary hover:text-accent transition-colors"
                         title="Edit Project"
@@ -1752,16 +1878,37 @@ export default function AdminPage() {
                     <label className="block text-[10px] font-mono uppercase text-text-muted mb-0.5">
                       Image URL / Path
                     </label>
-                    <input
-                      type="text"
-                      value={item.image}
-                      onChange={(e) => {
-                        const updated = [...gallery];
-                        updated[idx].image = e.target.value;
-                        setGallery(updated);
-                      }}
-                      className="w-full px-3 py-1.5 rounded-lg bg-surface-dark border border-border text-xs text-text-secondary focus:border-accent focus:outline-none font-mono"
-                    />
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={item.image}
+                        onChange={(e) => {
+                          const updated = [...gallery];
+                          updated[idx].image = e.target.value;
+                          setGallery(updated);
+                        }}
+                        className="flex-1 px-3 py-1.5 rounded-lg bg-surface-dark border border-border text-xs text-text-secondary focus:border-accent focus:outline-none font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMediaPicker({
+                            isOpen: true,
+                            title: `Select Photo for: ${item.title}`,
+                            onSelect: (p) => {
+                              const updated = [...gallery];
+                              updated[idx].image = p;
+                              setGallery(updated);
+                            },
+                          })
+                        }
+                        className="px-2.5 py-1.5 rounded-lg bg-surface-dark border border-border hover:border-accent text-accent text-xs font-mono flex items-center gap-1 shrink-0"
+                        title="Choose from Media Library"
+                      >
+                        <ImageIcon className="w-3 h-3" />
+                        <span>Choose</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -1881,31 +2028,135 @@ export default function AdminPage() {
         {/* TAB 6: Media Asset Manager */}
         {activeTab === "media" && (
           <div className="bg-surface rounded-2xl border border-border p-6 sm:p-8 space-y-6">
-            <div className="border-b border-border/70 pb-4">
-              <h2 className="text-lg font-bold text-text-primary">Media Asset Browser ({availableImages.length})</h2>
-              <p className="text-xs text-text-secondary">
-                Browse existing verified construction site photography and project records. Click "Copy Path" to use in any project or gallery item.
-              </p>
+            <div className="border-b border-border/70 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-accent" />
+                  <span>Media Asset Browser ({mediaAssetsList.length} Files)</span>
+                </h2>
+                <p className="text-xs text-text-secondary mt-1">
+                  Complete repository of verified site photography, CAD drawings, profile portraits, and vector diagrams. Click &quot;Copy Path&quot; to use in any project, phase, drawing, or gallery record.
+                </p>
+              </div>
+
+              {/* Quick Summary Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-1 rounded-lg bg-surface-dark border border-border text-[11px] font-mono text-emerald-400">
+                  46 Site Photos
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-surface-dark border border-border text-[11px] font-mono text-sky-400">
+                  2 CAD Drawings
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-surface-dark border border-border text-[11px] font-mono text-amber-400">
+                  3 Portraits
+                </span>
+                <span className="px-2.5 py-1 rounded-lg bg-surface-dark border border-border text-[11px] font-mono text-purple-400">
+                  11 Schematics
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {availableImages.map((imgSrc, iIdx) => (
-                <div key={iIdx} className="bg-surface-dark rounded-xl border border-border overflow-hidden p-2 space-y-2 group">
-                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-black/40 border border-border">
-                    <img src={imgSrc} alt={`Asset ${iIdx}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            {/* Filter & Search Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-surface-dark p-3.5 rounded-xl border border-border">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { key: "ALL", label: `All (${mediaAssetsList.length})` },
+                  { key: "site", label: `Site Photos (${mediaAssetsList.filter((m) => m.category === "site").length})` },
+                  { key: "drawings", label: `Drawings (${mediaAssetsList.filter((m) => m.category === "drawings").length})` },
+                  { key: "profile", label: `Profile (${mediaAssetsList.filter((m) => m.category === "profile").length})` },
+                  { key: "schematics", label: `Schematics (${mediaAssetsList.filter((m) => m.category === "schematics").length})` },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setMediaTabCategory(tab.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all ${
+                      mediaTabCategory === tab.key
+                        ? "bg-accent text-white shadow-md shadow-accent/20"
+                        : "bg-surface border border-border text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-full sm:w-72">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-text-muted" />
+                <input
+                  type="text"
+                  value={mediaTabSearch}
+                  onChange={(e) => setMediaTabSearch(e.target.value)}
+                  placeholder="Filter by name or path..."
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-mono text-text-primary focus:outline-none focus:border-accent placeholder:text-text-muted"
+                />
+                {mediaTabSearch && (
+                  <button
+                    onClick={() => setMediaTabSearch("")}
+                    className="absolute right-2.5 top-2 text-text-muted hover:text-text-primary text-xs"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Media Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+              {mediaAssetsList
+                .filter((asset) => {
+                  const matchCat = mediaTabCategory === "ALL" || asset.category === mediaTabCategory;
+                  if (!matchCat) return false;
+                  if (!mediaTabSearch.trim()) return true;
+                  const q = mediaTabSearch.toLowerCase();
+                  return (
+                    asset.name.toLowerCase().includes(q) ||
+                    asset.path.toLowerCase().includes(q) ||
+                    asset.categoryLabel.toLowerCase().includes(q)
+                  );
+                })
+                .map((asset, iIdx) => (
+                  <div
+                    key={iIdx}
+                    className="bg-surface-dark rounded-xl border border-border overflow-hidden p-2.5 space-y-2 group hover:border-accent/50 transition-all hover:shadow-lg"
+                  >
+                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-black/50 border border-border/80">
+                      <img
+                        src={asset.path}
+                        alt={asset.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[9px] font-mono text-accent">
+                        {asset.categoryLabel}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-mono text-text-primary truncate font-semibold" title={asset.name}>
+                        {asset.name}
+                      </p>
+                      <div className="flex items-center justify-between text-[10px] font-mono text-text-muted">
+                        <span className="truncate max-w-[90px]" title={asset.path}>
+                          {asset.path}
+                        </span>
+                        <button
+                          onClick={() => copyToClipboard(asset.path)}
+                          className="px-2 py-1 rounded bg-surface border border-border hover:border-accent text-text-secondary hover:text-accent flex items-center gap-1 shrink-0"
+                          title="Copy file path"
+                        >
+                          {copiedText === asset.path ? (
+                            <span className="text-emerald-400 flex items-center gap-0.5 font-bold">
+                              <Check className="w-3 h-3" /> Copied
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-0.5">
+                              <Copy className="w-3 h-3" /> Copy
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-mono text-text-muted">
-                    <span className="truncate max-w-[120px]">{imgSrc.split("/").pop()}</span>
-                    <button
-                      onClick={() => copyToClipboard(imgSrc)}
-                      className="p-1 rounded bg-surface border border-border hover:border-accent text-text-secondary hover:text-accent flex items-center gap-1"
-                      title="Copy path"
-                    >
-                      {copiedText === imgSrc ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         )}
@@ -2125,190 +2376,1333 @@ export default function AdminPage() {
         )}
       </main>
 
-      {/* Project Scope Editor Modal */}
+      {/* Comprehensive Multi-Tab Project Editor Modal */}
       {editingProject && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface rounded-2xl border border-border max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border/80 pb-4">
-              <h2 className="text-lg font-bold text-text-primary">
-                {isNewProject ? "Add New Civil Project" : `Edit Project: ${editingProject.title}`}
-              </h2>
-              <button onClick={() => setEditingProject(null)} className="text-text-muted hover:text-text-primary text-sm font-mono">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-surface rounded-2xl border border-border max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-border/80 flex items-center justify-between bg-surface-dark/60">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold text-accent px-2 py-0.5 rounded bg-accent/10 border border-accent/20">
+                    {editingProject.category}
+                  </span>
+                  <span className="text-xs font-mono text-text-muted">#{editingProject.number || "01"}</span>
+                </div>
+                <h2 className="text-base sm:text-lg font-bold text-text-primary mt-1 line-clamp-1">
+                  {isNewProject ? "Add New Civil Engineering Project" : editingProject.title}
+                </h2>
+              </div>
+              <button
+                onClick={() => setEditingProject(null)}
+                className="p-1.5 rounded-lg bg-surface border border-border text-text-muted hover:text-text-primary transition-colors text-sm font-mono"
+              >
                 ✕ Close
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div>
-                <label className="block font-mono uppercase text-text-muted mb-1">Title</label>
-                <input
-                  type="text"
-                  value={editingProject.title}
-                  onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none"
-                />
-              </div>
+            {/* Sub-Tab Navigation Bar */}
+            <div className="flex items-center gap-1 overflow-x-auto px-5 py-2.5 bg-surface-dark border-b border-border/70 scrollbar-none">
+              {[
+                { key: "info", label: "Overview & Roles", icon: FileText },
+                { key: "facts", label: `Key Specs (${editingProject.facts?.length || 0})`, icon: Sliders },
+                { key: "phases", label: `Sub-Works / Phases (${editingProject.phases?.length || 0})`, icon: Layers },
+                { key: "drawings", label: `Drawings (${editingProject.drawings?.length || 0})`, icon: Compass },
+                { key: "photos", label: `Field Photos (${editingProject.sitePhotos?.length || 0})`, icon: Camera },
+                { key: "technical", label: "Engineering Depth", icon: HardHat },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = projectModalTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setProjectModalTab(tab.key as any)}
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? "bg-accent text-white shadow-md shadow-accent/20"
+                        : "bg-surface border border-border/70 text-text-secondary hover:text-text-primary hover:border-accent/40"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-              <div>
-                <label className="block font-mono uppercase text-text-muted mb-1">Category</label>
-                <select
-                  value={editingProject.category}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      category: e.target.value as any,
-                    })
-                  }
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none font-mono"
-                >
-                  <option value="INFRASTRUCTURE">INFRASTRUCTURE</option>
-                  <option value="BUILDINGS">BUILDINGS</option>
-                  <option value="SURVEYING">SURVEYING</option>
-                  <option value="ACADEMIC">ACADEMIC</option>
-                </select>
-              </div>
+            {/* Scrollable Content Area */}
+            <div className="p-5 sm:p-7 overflow-y-auto flex-1 space-y-6">
+              {/* SUB-TAB 1: General Info & Roles */}
+              {projectModalTab === "info" && (
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    <div className="sm:col-span-2">
+                      <label className="block font-mono uppercase text-text-muted mb-1">Project Title</label>
+                      <input
+                        type="text"
+                        value={editingProject.title}
+                        onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs font-semibold"
+                      />
+                    </div>
 
-              <div>
-                <label className="block font-mono uppercase text-text-muted mb-1">Location</label>
-                <input
-                  type="text"
-                  value={editingProject.location}
-                  onChange={(e) => setEditingProject({ ...editingProject, location: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none"
-                />
-              </div>
+                    <div>
+                      <label className="block font-mono uppercase text-text-muted mb-1">Category</label>
+                      <select
+                        value={editingProject.category}
+                        onChange={(e) =>
+                          setEditingProject({
+                            ...editingProject,
+                            category: e.target.value as any,
+                          })
+                        }
+                        className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none font-mono text-xs"
+                      >
+                        <option value="INFRASTRUCTURE">INFRASTRUCTURE</option>
+                        <option value="BUILDINGS">BUILDINGS</option>
+                        <option value="SURVEYING">SURVEYING</option>
+                        <option value="ACADEMIC">ACADEMIC</option>
+                      </select>
+                    </div>
 
-              <div>
-                <label className="block font-mono uppercase text-text-muted mb-1">Contractor / Firm</label>
-                <input
-                  type="text"
-                  value={editingProject.firm}
-                  onChange={(e) => setEditingProject({ ...editingProject, firm: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none"
-                />
-              </div>
+                    <div>
+                      <label className="block font-mono uppercase text-text-muted mb-1">Project Number / Code</label>
+                      <input
+                        type="text"
+                        value={editingProject.number}
+                        onChange={(e) => setEditingProject({ ...editingProject, number: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs font-mono"
+                        placeholder="01"
+                      />
+                    </div>
 
-              <div className="sm:col-span-2">
-                <label className="block font-mono uppercase text-text-muted mb-1">Subtitle</label>
-                <input
-                  type="text"
-                  value={editingProject.subtitle}
-                  onChange={(e) => setEditingProject({ ...editingProject, subtitle: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none"
-                />
-              </div>
+                    <div>
+                      <label className="block font-mono uppercase text-text-muted mb-1">Contractor / Firm</label>
+                      <input
+                        type="text"
+                        value={editingProject.firm}
+                        onChange={(e) => setEditingProject({ ...editingProject, firm: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs"
+                      />
+                    </div>
 
-              <div className="sm:col-span-2">
-                <label className="block font-mono uppercase text-text-muted mb-1">Summary Description</label>
-                <textarea
-                  rows={3}
-                  value={editingProject.summary}
-                  onChange={(e) => setEditingProject({ ...editingProject, summary: e.target.value })}
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none leading-relaxed"
-                />
-              </div>
+                    <div>
+                      <label className="block font-mono uppercase text-text-muted mb-1">Location Packages</label>
+                      <input
+                        type="text"
+                        value={editingProject.location}
+                        onChange={(e) => setEditingProject({ ...editingProject, location: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs"
+                      />
+                    </div>
 
-              <div className="sm:col-span-2">
-                <label className="block font-mono uppercase text-text-muted mb-1">Tools &amp; Standards (Comma separated)</label>
-                <input
-                  type="text"
-                  value={editingProject.tools.join(", ")}
-                  onChange={(e) =>
-                    setEditingProject({
-                      ...editingProject,
-                      tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
-                    })
-                  }
-                  className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none"
-                />
-              </div>
+                    <div>
+                      <label className="block font-mono uppercase text-text-muted mb-1">Duration / Period</label>
+                      <input
+                        type="text"
+                        value={editingProject.duration}
+                        onChange={(e) => setEditingProject({ ...editingProject, duration: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs"
+                      />
+                    </div>
 
-              <div className="sm:col-span-2">
-                <label className="block font-mono uppercase text-text-muted mb-1">Thumbnail Image Path</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={editingProject.image}
-                    onChange={(e) => setEditingProject({ ...editingProject, image: e.target.value })}
-                    className="flex-1 px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none font-mono"
-                  />
-                  <div className="w-10 h-9 rounded-lg bg-surface-dark border border-border overflow-hidden shrink-0">
-                    <img src={editingProject.image} alt="Thumb" className="w-full h-full object-cover" />
+                    <div className="sm:col-span-2">
+                      <label className="block font-mono uppercase text-text-muted mb-1">Role Title</label>
+                      <input
+                        type="text"
+                        value={editingProject.role}
+                        onChange={(e) => setEditingProject({ ...editingProject, role: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Image Picker */}
+                  <div className="p-4 rounded-xl bg-surface-dark border border-border space-y-2">
+                    <label className="block text-xs font-mono uppercase text-text-muted">
+                      Main Project Showcase Thumbnail Image
+                    </label>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      <input
+                        type="text"
+                        value={editingProject.image}
+                        onChange={(e) => setEditingProject({ ...editingProject, image: e.target.value })}
+                        className="flex-1 px-3.5 py-2 rounded-lg bg-surface border border-border text-text-primary font-mono text-xs focus:border-accent focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMediaPicker({
+                            isOpen: true,
+                            title: `Select Thumbnail for: ${editingProject.title}`,
+                            onSelect: (p) => setEditingProject({ ...editingProject, image: p }),
+                          })
+                        }
+                        className="px-3.5 py-2 rounded-lg bg-accent/15 border border-accent/40 hover:border-accent text-accent text-xs font-mono font-semibold flex items-center justify-center gap-1.5 shrink-0"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span>Choose from Library</span>
+                      </button>
+                      {editingProject.image && (
+                        <div className="w-16 h-11 rounded-lg bg-black/50 border border-border overflow-hidden shrink-0">
+                          <img src={editingProject.image} alt="Thumbnail" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-text-muted mb-1">Subtitle / Headline</label>
+                    <input
+                      type="text"
+                      value={editingProject.subtitle}
+                      onChange={(e) => setEditingProject({ ...editingProject, subtitle: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-text-muted mb-1">Summary Description</label>
+                    <textarea
+                      rows={3}
+                      value={editingProject.summary}
+                      onChange={(e) => setEditingProject({ ...editingProject, summary: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none leading-relaxed text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-text-muted mb-1">Full Engineering Overview</label>
+                    <textarea
+                      rows={3}
+                      value={editingProject.overview}
+                      onChange={(e) => setEditingProject({ ...editingProject, overview: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none leading-relaxed text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-text-muted mb-1">My Direct Engineering Role</label>
+                    <textarea
+                      rows={3}
+                      value={editingProject.myRole}
+                      onChange={(e) => setEditingProject({ ...editingProject, myRole: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none leading-relaxed text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-text-muted mb-1">
+                      Tools, Instruments &amp; Software (Comma separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingProject.tools?.join(", ") || ""}
+                      onChange={(e) =>
+                        setEditingProject({
+                          ...editingProject,
+                          tools: e.target.value.split(",").map((t) => t.trim()).filter(Boolean),
+                        })
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-surface-dark border border-border text-text-primary focus:border-accent focus:outline-none text-xs font-mono"
+                    />
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Phases and Drawings overview within editing modal */}
-              {editingProject.phases && editingProject.phases.length > 0 && (
-                <div className="sm:col-span-2 pt-2 border-t border-border/60">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-mono text-xs font-bold text-accent uppercase">
-                      Execution Phases &amp; Sub-Works ({editingProject.phases.length})
-                    </span>
-                    <span className="text-[11px] font-mono text-emerald-400">Consolidated</span>
+              {/* SUB-TAB 2: Key Facts & Specifications */}
+              {projectModalTab === "facts" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">Key Engineering Facts &amp; Specifications</h3>
+                      <p className="text-xs text-text-muted">
+                        Highlight badges displayed in project details (e.g. Capacity, Standard, Foundation Depth).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = [...(editingProject.facts || [])];
+                        updated.push({ label: "NEW SPECIFICATION", value: "Verified Value" });
+                        setEditingProject({ ...editingProject, facts: updated });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-soft text-white text-xs font-mono font-semibold"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Fact</span>
+                    </button>
                   </div>
-                  <div className="space-y-2">
-                    {editingProject.phases.map((ph, phIdx) => (
-                      <div key={phIdx} className="p-2.5 rounded-lg bg-surface-dark border border-border/80 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-accent text-[11px]">
-                            Phase {ph.phaseNumber}: {ph.title}
-                          </span>
-                          <span className="text-[10px] font-mono text-text-muted">{ph.category}</span>
+
+                  <div className="space-y-2.5">
+                    {editingProject.facts?.map((fact, fIdx) => (
+                      <div
+                        key={fIdx}
+                        className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 rounded-xl bg-surface-dark border border-border"
+                      >
+                        <div className="w-full sm:w-1/3">
+                          <label className="block text-[10px] font-mono uppercase text-text-muted mb-0.5">Label Title</label>
+                          <input
+                            type="text"
+                            value={fact.label}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.facts || [])];
+                              updated[fIdx].label = e.target.value;
+                              setEditingProject({ ...editingProject, facts: updated });
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-mono font-bold text-accent focus:border-accent focus:outline-none"
+                          />
                         </div>
-                        <p className="text-[11px] text-text-secondary mt-1">{ph.summary}</p>
+                        <div className="flex-1">
+                          <label className="block text-[10px] font-mono uppercase text-text-muted mb-0.5">Specification Value</label>
+                          <input
+                            type="text"
+                            value={fact.value}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.facts || [])];
+                              updated[fIdx].value = e.target.value;
+                              setEditingProject({ ...editingProject, facts: updated });
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-primary focus:border-accent focus:outline-none"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1 self-end sm:self-center pt-1 sm:pt-4">
+                          <button
+                            type="button"
+                            disabled={fIdx === 0}
+                            onClick={() => {
+                              if (fIdx > 0) {
+                                const updated = [...(editingProject.facts || [])];
+                                const temp = updated[fIdx - 1];
+                                updated[fIdx - 1] = updated[fIdx];
+                                updated[fIdx] = temp;
+                                setEditingProject({ ...editingProject, facts: updated });
+                              }
+                            }}
+                            className="p-1.5 rounded bg-surface border border-border text-text-muted hover:text-text-primary disabled:opacity-30"
+                            title="Move Up"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={fIdx === (editingProject.facts?.length || 1) - 1}
+                            onClick={() => {
+                              if (fIdx < (editingProject.facts?.length || 1) - 1) {
+                                const updated = [...(editingProject.facts || [])];
+                                const temp = updated[fIdx + 1];
+                                updated[fIdx + 1] = updated[fIdx];
+                                updated[fIdx] = temp;
+                                setEditingProject({ ...editingProject, facts: updated });
+                              }
+                            }}
+                            className="p-1.5 rounded bg-surface border border-border text-text-muted hover:text-text-primary disabled:opacity-30"
+                            title="Move Down"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingProject.facts?.filter((_, i) => i !== fIdx);
+                              setEditingProject({ ...editingProject, facts: updated });
+                            }}
+                            className="p-1.5 rounded bg-surface border border-border text-text-muted hover:text-red-400"
+                            title="Delete Fact"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {editingProject.drawings && editingProject.drawings.length > 0 && (
-                <div className="sm:col-span-2 pt-2 border-t border-border/60">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-mono text-xs font-bold text-accent uppercase">
-                      Technical Drawings &amp; CAD Schematics ({editingProject.drawings.length})
-                    </span>
-                    <span className="text-[11px] font-mono text-sky-400">Designated Drawings</span>
+              {/* SUB-TAB 3: Sub-Works / Execution Phases */}
+              {projectModalTab === "phases" && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/70 pb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">Execution Phases &amp; Sub-Works ({editingProject.phases?.length || 0})</h3>
+                      <p className="text-xs text-text-muted">
+                        All individual works, packages, and technical operations executed under this flagship project.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPhase: ProjectPhase = {
+                          phaseNumber: String((editingProject.phases?.length || 0) + 1).padStart(2, "0"),
+                          title: "New Sub-Work Operation",
+                          category: "CONSTRUCTION EXECUTION",
+                          summary: "Scope description of this specific engineering phase.",
+                          keyTasks: ["Site setting out and inspection.", "Quality verification against drawings."],
+                          toolsUsed: ["Total Station", "Auto Level"],
+                          image: "/images/site/site-12.jpg",
+                        };
+                        setEditingProject({
+                          ...editingProject,
+                          phases: [...(editingProject.phases || []), newPhase],
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-soft text-white text-xs font-mono font-semibold shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Sub-Work Phase</span>
+                    </button>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {editingProject.drawings.map((dwg, dwgIdx) => (
-                      <div key={dwgIdx} className="p-2.5 rounded-lg bg-surface-dark border border-border/80 text-xs space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono text-[10px] font-bold text-sky-400">{dwg.sheetNo || dwg.type}</span>
-                        </div>
-                        <div className="font-bold text-text-primary text-[11px]">{dwg.title}</div>
-                        {dwg.image && (
-                          <div className="w-full h-16 rounded overflow-hidden bg-black/40 border border-border/60">
-                            <img src={dwg.image} alt={dwg.title} className="w-full h-full object-cover" />
+
+                  <div className="space-y-5">
+                    {editingProject.phases?.map((ph, phIdx) => (
+                      <div
+                        key={phIdx}
+                        className="p-5 rounded-2xl bg-surface-dark border border-border space-y-4 shadow-sm"
+                      >
+                        {/* Phase Header */}
+                        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-accent px-2 py-0.5 rounded bg-accent/10 border border-accent/20">
+                              Phase {ph.phaseNumber}
+                            </span>
+                            <span className="font-bold text-text-primary text-sm line-clamp-1">{ph.title}</span>
                           </div>
-                        )}
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              disabled={phIdx === 0}
+                              onClick={() => {
+                                if (phIdx > 0) {
+                                  const updated = [...(editingProject.phases || [])];
+                                  const temp = updated[phIdx - 1];
+                                  updated[phIdx - 1] = updated[phIdx];
+                                  updated[phIdx] = temp;
+                                  setEditingProject({ ...editingProject, phases: updated });
+                                }
+                              }}
+                              className="p-1.5 rounded bg-surface border border-border text-text-muted hover:text-text-primary disabled:opacity-30"
+                              title="Move Phase Up"
+                            >
+                              <ArrowUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={phIdx === (editingProject.phases?.length || 1) - 1}
+                              onClick={() => {
+                                if (phIdx < (editingProject.phases?.length || 1) - 1) {
+                                  const updated = [...(editingProject.phases || [])];
+                                  const temp = updated[phIdx + 1];
+                                  updated[phIdx + 1] = updated[phIdx];
+                                  updated[phIdx] = temp;
+                                  setEditingProject({ ...editingProject, phases: updated });
+                                }
+                              }}
+                              className="p-1.5 rounded bg-surface border border-border text-text-muted hover:text-text-primary disabled:opacity-30"
+                              title="Move Phase Down"
+                            >
+                              <ArrowDown className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Delete Phase ${ph.phaseNumber}: "${ph.title}"?`)) {
+                                  const updated = editingProject.phases?.filter((_, i) => i !== phIdx);
+                                  setEditingProject({ ...editingProject, phases: updated });
+                                }
+                              }}
+                              className="p-1.5 rounded bg-surface border border-border hover:border-red-500 text-text-muted hover:text-red-400"
+                              title="Delete Phase"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Phase Inputs */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                          <div>
+                            <label className="block font-mono uppercase text-text-muted mb-1">Phase Number</label>
+                            <input
+                              type="text"
+                              value={ph.phaseNumber}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.phases || [])];
+                                updated[phIdx].phaseNumber = e.target.value;
+                                setEditingProject({ ...editingProject, phases: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-mono text-xs focus:border-accent focus:outline-none"
+                              placeholder="01"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block font-mono uppercase text-text-muted mb-1">Phase Title</label>
+                            <input
+                              type="text"
+                              value={ph.title}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.phases || [])];
+                                updated[phIdx].title = e.target.value;
+                                setEditingProject({ ...editingProject, phases: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-semibold text-xs focus:border-accent focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <label className="block font-mono uppercase text-text-muted mb-1">Category / Discipline Tag</label>
+                            <input
+                              type="text"
+                              value={ph.category || ""}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.phases || [])];
+                                updated[phIdx].category = e.target.value;
+                                setEditingProject({ ...editingProject, phases: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-mono text-xs focus:border-accent focus:outline-none"
+                              placeholder="e.g. SURVEYING & GEOMATICS, DEEP FOUNDATIONS"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <label className="block font-mono uppercase text-text-muted mb-1">Phase Summary</label>
+                            <textarea
+                              rows={2}
+                              value={ph.summary}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.phases || [])];
+                                updated[phIdx].summary = e.target.value;
+                                setEditingProject({ ...editingProject, phases: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary text-xs leading-relaxed focus:border-accent focus:outline-none"
+                            />
+                          </div>
+
+                          {/* Phase Inspection Image */}
+                          <div className="sm:col-span-3">
+                            <label className="block font-mono uppercase text-text-muted mb-1">Phase Site Photo</label>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <input
+                                type="text"
+                                value={ph.image || ""}
+                                onChange={(e) => {
+                                  const updated = [...(editingProject.phases || [])];
+                                  updated[phIdx].image = e.target.value;
+                                  setEditingProject({ ...editingProject, phases: updated });
+                                }}
+                                placeholder="/images/site/site-XX.jpg"
+                                className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-mono text-xs focus:border-accent focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setMediaPicker({
+                                    isOpen: true,
+                                    title: `Select Image for Phase ${ph.phaseNumber}: ${ph.title}`,
+                                    onSelect: (p) => {
+                                      const updated = [...(editingProject.phases || [])];
+                                      updated[phIdx].image = p;
+                                      setEditingProject({ ...editingProject, phases: updated });
+                                    },
+                                  })
+                                }
+                                className="px-3 py-1.5 rounded-lg bg-surface border border-border hover:border-accent text-accent text-xs font-mono flex items-center justify-center gap-1 shrink-0"
+                              >
+                                <ImageIcon className="w-3.5 h-3.5" />
+                                <span>Choose Image</span>
+                              </button>
+                              {ph.image && (
+                                <div className="w-10 h-8 rounded bg-black/50 border border-border overflow-hidden shrink-0">
+                                  <img src={ph.image} alt="Phase" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Key Tasks List */}
+                        <div className="space-y-2 pt-2 border-t border-border/50">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-mono uppercase text-text-muted">
+                              Key Field Tasks ({ph.keyTasks?.length || 0})
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = [...(editingProject.phases || [])];
+                                updated[phIdx].keyTasks = [...(ph.keyTasks || []), "New specific site execution task."];
+                                setEditingProject({ ...editingProject, phases: updated });
+                              }}
+                              className="text-xs font-mono text-accent hover:underline flex items-center gap-1"
+                            >
+                              <Plus className="w-3 h-3" /> Add Task
+                            </button>
+                          </div>
+                          <div className="space-y-1.5">
+                            {ph.keyTasks?.map((task, tIdx) => (
+                              <div key={tIdx} className="flex items-center gap-2">
+                                <span className="text-accent font-mono text-xs">•</span>
+                                <input
+                                  type="text"
+                                  value={task}
+                                  onChange={(e) => {
+                                    const updated = [...(editingProject.phases || [])];
+                                    updated[phIdx].keyTasks[tIdx] = e.target.value;
+                                    setEditingProject({ ...editingProject, phases: updated });
+                                  }}
+                                  className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-secondary focus:border-accent focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...(editingProject.phases || [])];
+                                    updated[phIdx].keyTasks.splice(tIdx, 1);
+                                    setEditingProject({ ...editingProject, phases: updated });
+                                  }}
+                                  className="p-1 text-text-muted hover:text-red-400"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Tools Used in Phase */}
+                        <div className="pt-2 border-t border-border/50">
+                          <label className="block text-[11px] font-mono uppercase text-text-muted mb-1">
+                            Instruments &amp; Equipment Used (Comma separated)
+                          </label>
+                          <input
+                            type="text"
+                            value={ph.toolsUsed?.join(", ") || ""}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.phases || [])];
+                              updated[phIdx].toolsUsed = e.target.value
+                                .split(",")
+                                .map((t) => t.trim())
+                                .filter(Boolean);
+                              setEditingProject({ ...editingProject, phases: updated });
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-mono text-text-secondary focus:border-accent focus:outline-none"
+                            placeholder="Total Station, Auto Level, Piling Rig"
+                          />
+                        </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-TAB 4: Technical Drawings & CAD */}
+              {projectModalTab === "drawings" && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/70 pb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">
+                        Technical Drawings &amp; CAD Schematics ({editingProject.drawings?.length || 0})
+                      </h3>
+                      <p className="text-xs text-text-muted">
+                        Designated blueprints, site plans, and process schematics for this project.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newDwg: ProjectDrawing = {
+                          sheetNo: `DWG-WWTP-0${(editingProject.drawings?.length || 0) + 1}`,
+                          title: "New Technical Blueprint",
+                          type: "2D Engineering Drawing / Layout",
+                          scale: "1:100",
+                          description: "Engineering layout and dimensional detailing.",
+                          image: "/images/2d-drawing-sallaghari.jpeg",
+                        };
+                        setEditingProject({
+                          ...editingProject,
+                          drawings: [...(editingProject.drawings || []), newDwg],
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-soft text-white text-xs font-mono font-semibold shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Drawing</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {editingProject.drawings?.map((dwg, dIdx) => (
+                      <div
+                        key={dIdx}
+                        className="p-5 rounded-2xl bg-surface-dark border border-border space-y-4"
+                      >
+                        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-sky-400 px-2 py-0.5 rounded bg-sky-950/60 border border-sky-800/40">
+                              {dwg.sheetNo || "DWG"}
+                            </span>
+                            <span className="font-bold text-text-primary text-sm">{dwg.title}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Delete drawing "${dwg.title}"?`)) {
+                                const updated = editingProject.drawings?.filter((_, i) => i !== dIdx);
+                                setEditingProject({ ...editingProject, drawings: updated });
+                              }
+                            }}
+                            className="p-1.5 rounded bg-surface border border-border hover:border-red-500 text-text-muted hover:text-red-400"
+                            title="Delete Drawing"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                          <div>
+                            <label className="block font-mono uppercase text-text-muted mb-1">Sheet Number</label>
+                            <input
+                              type="text"
+                              value={dwg.sheetNo || ""}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.drawings || [])];
+                                updated[dIdx].sheetNo = e.target.value;
+                                setEditingProject({ ...editingProject, drawings: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-mono text-xs focus:border-accent focus:outline-none"
+                              placeholder="DWG-SLG-WWTP-01"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-mono uppercase text-text-muted mb-1">Drawing Type</label>
+                            <input
+                              type="text"
+                              value={dwg.type || ""}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.drawings || [])];
+                                updated[dIdx].type = e.target.value;
+                                setEditingProject({ ...editingProject, drawings: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary text-xs focus:border-accent focus:outline-none"
+                              placeholder="e.g. Process & Hydraulic Plan"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block font-mono uppercase text-text-muted mb-1">Drawing Scale</label>
+                            <input
+                              type="text"
+                              value={dwg.scale || ""}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.drawings || [])];
+                                updated[dIdx].scale = e.target.value;
+                                setEditingProject({ ...editingProject, drawings: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-mono text-xs focus:border-accent focus:outline-none"
+                              placeholder="1:100 or NTS"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <label className="block font-mono uppercase text-text-muted mb-1">Drawing Title</label>
+                            <input
+                              type="text"
+                              value={dwg.title}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.drawings || [])];
+                                updated[dIdx].title = e.target.value;
+                                setEditingProject({ ...editingProject, drawings: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-semibold text-xs focus:border-accent focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-3">
+                            <label className="block font-mono uppercase text-text-muted mb-1">Description</label>
+                            <textarea
+                              rows={2}
+                              value={dwg.description}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.drawings || [])];
+                                updated[dIdx].description = e.target.value;
+                                setEditingProject({ ...editingProject, drawings: updated });
+                              }}
+                              className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary text-xs leading-relaxed focus:border-accent focus:outline-none"
+                            />
+                          </div>
+
+                          {/* Drawing Image Picker */}
+                          <div className="sm:col-span-3">
+                            <label className="block font-mono uppercase text-text-muted mb-1">CAD Blueprint Image</label>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                              <input
+                                type="text"
+                                value={dwg.image || ""}
+                                onChange={(e) => {
+                                  const updated = [...(editingProject.drawings || [])];
+                                  updated[dIdx].image = e.target.value;
+                                  setEditingProject({ ...editingProject, drawings: updated });
+                                }}
+                                placeholder="/images/2d-drawing-sallaghari.jpeg"
+                                className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-text-primary font-mono text-xs focus:border-accent focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setMediaPicker({
+                                    isOpen: true,
+                                    title: `Select Drawing Image for: ${dwg.title}`,
+                                    onSelect: (p) => {
+                                      const updated = [...(editingProject.drawings || [])];
+                                      updated[dIdx].image = p;
+                                      setEditingProject({ ...editingProject, drawings: updated });
+                                    },
+                                  })
+                                }
+                                className="px-3 py-1.5 rounded-lg bg-surface border border-border hover:border-accent text-accent text-xs font-mono flex items-center justify-center gap-1 shrink-0"
+                              >
+                                <ImageIcon className="w-3.5 h-3.5" />
+                                <span>Choose Drawing</span>
+                              </button>
+                              {dwg.image && (
+                                <div className="w-14 h-9 rounded bg-black/60 border border-border overflow-hidden shrink-0">
+                                  <img src={dwg.image} alt="Drawing" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-TAB 5: Field Photos & Stage Records */}
+              {projectModalTab === "photos" && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/70 pb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">
+                        Field Photography &amp; Construction Stage Records ({editingProject.sitePhotos?.length || 0})
+                      </h3>
+                      <p className="text-xs text-text-muted">
+                        Visual field documentation for major milestones (piling, formwork, rebar, QA).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPhoto = {
+                          stage: "Reinforcement & Concreting",
+                          caption: "Field inspection of concrete pour and structural cover.",
+                          image: "/images/site/site-24.jpg",
+                        };
+                        setEditingProject({
+                          ...editingProject,
+                          sitePhotos: [...(editingProject.sitePhotos || []), newPhoto],
+                        });
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent hover:bg-accent-soft text-white text-xs font-mono font-semibold shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Site Photo</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {editingProject.sitePhotos?.map((sp, spIdx) => (
+                      <div
+                        key={spIdx}
+                        className="p-4 rounded-xl bg-surface-dark border border-border space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">
+                            {sp.stage}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingProject.sitePhotos?.filter((_, i) => i !== spIdx);
+                              setEditingProject({ ...editingProject, sitePhotos: updated });
+                            }}
+                            className="p-1 rounded bg-surface border border-border text-text-muted hover:text-red-400"
+                            title="Remove Photo"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase text-text-muted mb-0.5">
+                            Stage / Milestone Tag
+                          </label>
+                          <input
+                            type="text"
+                            value={sp.stage}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.sitePhotos || [])];
+                              updated[spIdx].stage = e.target.value;
+                              setEditingProject({ ...editingProject, sitePhotos: updated });
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-primary focus:border-accent focus:outline-none font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase text-text-muted mb-0.5">
+                            Caption Description
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={sp.caption}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.sitePhotos || [])];
+                              updated[spIdx].caption = e.target.value;
+                              setEditingProject({ ...editingProject, sitePhotos: updated });
+                            }}
+                            className="w-full px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-primary focus:border-accent focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-mono uppercase text-text-muted mb-0.5">
+                            Image Path
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={sp.image || ""}
+                              onChange={(e) => {
+                                const updated = [...(editingProject.sitePhotos || [])];
+                                updated[spIdx].image = e.target.value;
+                                setEditingProject({ ...editingProject, sitePhotos: updated });
+                              }}
+                              className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-primary font-mono focus:border-accent focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setMediaPicker({
+                                  isOpen: true,
+                                  title: `Select Site Photo for: ${sp.stage}`,
+                                  onSelect: (p) => {
+                                    const updated = [...(editingProject.sitePhotos || [])];
+                                    updated[spIdx].image = p;
+                                    setEditingProject({ ...editingProject, sitePhotos: updated });
+                                  },
+                                })
+                              }
+                              className="px-2.5 py-1.5 rounded-lg bg-surface border border-border hover:border-accent text-accent text-xs font-mono flex items-center gap-1 shrink-0"
+                            >
+                              <ImageIcon className="w-3 h-3" />
+                              <span>Choose</span>
+                            </button>
+                            {sp.image && (
+                              <div className="w-10 h-8 rounded bg-black/60 border border-border overflow-hidden shrink-0">
+                                <img src={sp.image} alt="Site" className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-TAB 6: Engineering Depth (Challenges, Solutions, Outcomes, Responsibilities) */}
+              {projectModalTab === "technical" && (
+                <div className="space-y-6">
+                  {/* Challenges Section */}
+                  <div className="p-5 rounded-2xl bg-surface-dark border border-border space-y-3">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-text-primary">Engineering Challenges ({editingProject.challenges?.length || 0})</h4>
+                        <p className="text-[11px] text-text-muted">Technical difficulties encountered in the field.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...(editingProject.challenges || []), "New site challenge description."];
+                          setEditingProject({ ...editingProject, challenges: updated });
+                        }}
+                        className="text-xs font-mono text-accent hover:underline flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add Challenge
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {editingProject.challenges?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.challenges || [])];
+                              updated[idx] = e.target.value;
+                              setEditingProject({ ...editingProject, challenges: updated });
+                            }}
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-secondary focus:border-accent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingProject.challenges?.filter((_, i) => i !== idx);
+                              setEditingProject({ ...editingProject, challenges: updated });
+                            }}
+                            className="p-1.5 text-text-muted hover:text-red-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Solutions Section */}
+                  <div className="p-5 rounded-2xl bg-surface-dark border border-border space-y-3">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-text-primary">Applied Engineering Solutions ({editingProject.solutions?.length || 0})</h4>
+                        <p className="text-[11px] text-text-muted">Direct engineering countermeasures implemented.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...(editingProject.solutions || []), "New implemented technical solution."];
+                          setEditingProject({ ...editingProject, solutions: updated });
+                        }}
+                        className="text-xs font-mono text-accent hover:underline flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add Solution
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {editingProject.solutions?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.solutions || [])];
+                              updated[idx] = e.target.value;
+                              setEditingProject({ ...editingProject, solutions: updated });
+                            }}
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-secondary focus:border-accent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingProject.solutions?.filter((_, i) => i !== idx);
+                              setEditingProject({ ...editingProject, solutions: updated });
+                            }}
+                            className="p-1.5 text-text-muted hover:text-red-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Outcomes Section */}
+                  <div className="p-5 rounded-2xl bg-surface-dark border border-border space-y-3">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-text-primary">Measurable Outcomes &amp; Tolerances ({editingProject.outcomes?.length || 0})</h4>
+                        <p className="text-[11px] text-text-muted">Verified quality compliance results and material test milestones.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...(editingProject.outcomes || []), "Achieved 100% compliance with structural specifications."];
+                          setEditingProject({ ...editingProject, outcomes: updated });
+                        }}
+                        className="text-xs font-mono text-accent hover:underline flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add Outcome
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {editingProject.outcomes?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.outcomes || [])];
+                              updated[idx] = e.target.value;
+                              setEditingProject({ ...editingProject, outcomes: updated });
+                            }}
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-secondary focus:border-accent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingProject.outcomes?.filter((_, i) => i !== idx);
+                              setEditingProject({ ...editingProject, outcomes: updated });
+                            }}
+                            className="p-1.5 text-text-muted hover:text-red-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Site Responsibilities */}
+                  <div className="p-5 rounded-2xl bg-surface-dark border border-border space-y-3">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-text-primary">Direct Field Responsibilities ({editingProject.responsibilities?.length || 0})</h4>
+                        <p className="text-[11px] text-text-muted">Day-to-day duties executed on site.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...(editingProject.responsibilities || []), "Supervised on-site construction operations."];
+                          setEditingProject({ ...editingProject, responsibilities: updated });
+                        }}
+                        className="text-xs font-mono text-accent hover:underline flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add Duty
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {editingProject.responsibilities?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.responsibilities || [])];
+                              updated[idx] = e.target.value;
+                              setEditingProject({ ...editingProject, responsibilities: updated });
+                            }}
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-secondary focus:border-accent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingProject.responsibilities?.filter((_, i) => i !== idx);
+                              setEditingProject({ ...editingProject, responsibilities: updated });
+                            }}
+                            className="p-1.5 text-text-muted hover:text-red-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Technical Approach */}
+                  <div className="p-5 rounded-2xl bg-surface-dark border border-border space-y-3">
+                    <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-text-primary">Technical Methodology &amp; Approach ({editingProject.technicalApproach?.length || 0})</h4>
+                        <p className="text-[11px] text-text-muted">Engineering procedures and precision techniques applied.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...(editingProject.technicalApproach || []), "Applied precision instrumental setting out."];
+                          setEditingProject({ ...editingProject, technicalApproach: updated });
+                        }}
+                        className="text-xs font-mono text-accent hover:underline flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add Approach
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {editingProject.technicalApproach?.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={item}
+                            onChange={(e) => {
+                              const updated = [...(editingProject.technicalApproach || [])];
+                              updated[idx] = e.target.value;
+                              setEditingProject({ ...editingProject, technicalApproach: updated });
+                            }}
+                            className="flex-1 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-secondary focus:border-accent focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = editingProject.technicalApproach?.filter((_, i) => i !== idx);
+                              setEditingProject({ ...editingProject, technicalApproach: updated });
+                            }}
+                            className="p-1.5 text-text-muted hover:text-red-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/80">
+            {/* Modal Action Footer */}
+            <div className="p-4 sm:p-5 border-t border-border/80 flex items-center justify-between bg-surface-dark/80">
+              <span className="text-xs font-mono text-text-muted hidden sm:inline">
+                {editingProject.phases?.length || 0} Phases • {editingProject.drawings?.length || 0} Drawings • {editingProject.facts?.length || 0} Specs
+              </span>
+              <div className="flex items-center gap-3 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setEditingProject(null)}
+                  className="px-4 py-2 rounded-xl bg-surface border border-border text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isNewProject) {
+                      setProjects([...projects, editingProject]);
+                    } else {
+                      setProjects(projects.map((p) => (p.id === editingProject.id ? editingProject : p)));
+                    }
+                    setEditingProject(null);
+                    setStatusMessage({
+                      text: `Project "${editingProject.title}" updated in working memory. Click "Save & Publish Changes" to commit!`,
+                      type: "success",
+                    });
+                  }}
+                  className="px-5 py-2 rounded-xl bg-accent hover:bg-accent-soft text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-accent/20 transition-all flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Apply Project Changes</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Universal Media Picker Modal */}
+      {mediaPicker && (
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+          <div className="bg-surface rounded-2xl border border-border max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Picker Header */}
+            <div className="p-5 border-b border-border/80 flex items-center justify-between bg-surface-dark/70">
+              <div>
+                <h3 className="font-bold text-text-primary text-base flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-accent" />
+                  <span>{mediaPicker.title || "Choose Image from Media Assets"}</span>
+                </h3>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Click any image thumbnail to select it instantly.
+                </p>
+              </div>
               <button
-                onClick={() => setEditingProject(null)}
-                className="px-4 py-2 rounded-xl bg-surface border border-border text-xs font-semibold text-text-secondary hover:text-text-primary"
+                type="button"
+                onClick={() => setMediaPicker(null)}
+                className="p-1.5 rounded-lg bg-surface border border-border text-text-muted hover:text-text-primary transition-colors"
               >
-                Cancel
+                ✕
               </button>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="p-4 bg-surface-dark/40 border-b border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {[
+                  { key: "ALL", label: `All (${mediaAssetsList.length})` },
+                  { key: "site", label: `Site Photos (${mediaAssetsList.filter((m) => m.category === "site").length})` },
+                  { key: "drawings", label: `Drawings (${mediaAssetsList.filter((m) => m.category === "drawings").length})` },
+                  { key: "profile", label: `Profile (${mediaAssetsList.filter((m) => m.category === "profile").length})` },
+                  { key: "schematics", label: `Schematics (${mediaAssetsList.filter((m) => m.category === "schematics").length})` },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setMediaPickerCategory(tab.key)}
+                    className={`px-3 py-1 rounded-lg text-xs font-mono font-medium transition-all ${
+                      mediaPickerCategory === tab.key
+                        ? "bg-accent text-white"
+                        : "bg-surface border border-border text-text-secondary hover:text-text-primary"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative w-full sm:w-60">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-text-muted" />
+                <input
+                  type="text"
+                  value={mediaPickerSearch}
+                  onChange={(e) => setMediaPickerSearch(e.target.value)}
+                  placeholder="Search filename..."
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface border border-border text-xs font-mono text-text-primary focus:outline-none focus:border-accent placeholder:text-text-muted"
+                />
+              </div>
+            </div>
+
+            {/* Images Grid */}
+            <div className="p-5 overflow-y-auto flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {mediaAssetsList
+                .filter((asset) => {
+                  const matchCat = mediaPickerCategory === "ALL" || asset.category === mediaPickerCategory;
+                  if (!matchCat) return false;
+                  if (!mediaPickerSearch.trim()) return true;
+                  const q = mediaPickerSearch.toLowerCase();
+                  return (
+                    asset.name.toLowerCase().includes(q) ||
+                    asset.path.toLowerCase().includes(q) ||
+                    asset.categoryLabel.toLowerCase().includes(q)
+                  );
+                })
+                .map((asset, aIdx) => (
+                  <button
+                    key={aIdx}
+                    type="button"
+                    onClick={() => {
+                      mediaPicker.onSelect(asset.path);
+                      setMediaPicker(null);
+                    }}
+                    className="group flex flex-col text-left bg-surface-dark rounded-xl border border-border hover:border-accent p-2 transition-all hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:border-accent"
+                  >
+                    <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-black/50 border border-border/70 mb-2">
+                      <img
+                        src={asset.path}
+                        alt={asset.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        loading="lazy"
+                      />
+                      <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[9px] font-mono text-accent">
+                        {asset.categoryLabel}
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono text-text-primary truncate w-full group-hover:text-accent font-semibold">
+                      {asset.name}
+                    </span>
+                    <span className="text-[10px] font-mono text-text-muted truncate w-full">
+                      {asset.path}
+                    </span>
+                  </button>
+                ))}
+            </div>
+
+            {/* Picker Footer */}
+            <div className="p-4 border-t border-border/80 flex items-center justify-between bg-surface-dark">
+              <span className="text-xs font-mono text-text-muted">
+                Showing media assets
+              </span>
               <button
-                onClick={() => {
-                  if (isNewProject) {
-                    setProjects([...projects, editingProject]);
-                  } else {
-                    setProjects(projects.map((p) => (p.id === editingProject.id ? editingProject : p)));
-                  }
-                  setEditingProject(null);
-                }}
-                className="px-5 py-2 rounded-xl bg-accent hover:bg-accent-soft text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-accent/20"
+                type="button"
+                onClick={() => setMediaPicker(null)}
+                className="px-4 py-1.5 rounded-lg bg-surface border border-border text-xs text-text-secondary hover:text-text-primary"
               >
-                Save Project Changes
+                Close
               </button>
             </div>
           </div>
