@@ -45,7 +45,7 @@ import { ProjectCaseStudy, projectsData as defaultProjects } from "@/data/projec
 import { ExperienceItem, experienceData as defaultExperience } from "@/data/experience";
 import { SkillCategory, skillsData as defaultSkills } from "@/data/skills";
 import { GalleryItem, galleryData as defaultGallery } from "@/data/gallery";
-import { STORAGE_KEY, UPDATE_EVENT } from "@/data/PortfolioContext";
+import { STORAGE_KEY, UPDATE_EVENT, DATA_VERSION, BROADCAST_CHANNEL } from "@/data/PortfolioContext";
 
 type TabKey = "profile" | "projects" | "experience" | "gallery" | "skills" | "inbox" | "media" | "sync";
 
@@ -152,6 +152,44 @@ export default function AdminPage() {
 
     // Load Inquiries
     loadInquiries();
+
+    // Real-time simultaneous cross-tab synchronization
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+        channel = new BroadcastChannel(BROADCAST_CHANNEL);
+        channel.onmessage = (event) => {
+          if (event.data) {
+            if (event.data.siteData) setSite(event.data.siteData);
+            if (event.data.projectsData) setProjects(event.data.projectsData);
+            if (event.data.experienceData) setExperience(event.data.experienceData);
+            if (event.data.galleryData) setGallery(event.data.galleryData);
+            if (event.data.skillsData) setSkills(event.data.skillsData);
+          }
+        };
+      }
+    } catch (e) {}
+
+    const handleSyncUpdate = (e: any) => {
+      if (e.detail) {
+        if (e.detail.siteData) setSite(e.detail.siteData);
+        if (e.detail.projectsData) setProjects(e.detail.projectsData);
+        if (e.detail.experienceData) setExperience(e.detail.experienceData);
+        if (e.detail.galleryData) setGallery(e.detail.galleryData);
+        if (e.detail.skillsData) setSkills(e.detail.skillsData);
+      }
+    };
+
+    window.addEventListener(UPDATE_EVENT, handleSyncUpdate);
+    window.addEventListener("storage", handleSyncUpdate);
+
+    return () => {
+      window.removeEventListener(UPDATE_EVENT, handleSyncUpdate);
+      window.removeEventListener("storage", handleSyncUpdate);
+      if (channel) {
+        channel.close();
+      }
+    };
   }, []);
 
   // Cooldown countdown timer for OTP resend
@@ -216,22 +254,48 @@ export default function AdminPage() {
   }
 
   function loadExistingContent() {
-    // 1. Try loading from localStorage first
+    // 1. Try loading from localStorage with strict version and structure validation
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed.siteData) setSite(parsed.siteData);
-        if (parsed.projectsData) setProjects(parsed.projectsData);
-        if (parsed.experienceData) setExperience(parsed.experienceData);
-        if (parsed.galleryData) setGallery(parsed.galleryData);
-        if (parsed.skillsData) setSkills(parsed.skillsData);
-        return;
+        const isCurrentVersion = parsed.version === DATA_VERSION;
+        const hasValidConsolidatedProject =
+          Array.isArray(parsed.projectsData) &&
+          parsed.projectsData.length === defaultProjects.length &&
+          parsed.projectsData.some((p: any) => p.id === "wwtp-sallaghari-kodku-dhobighat");
+
+        if (isCurrentVersion && hasValidConsolidatedProject) {
+          if (parsed.siteData) setSite(parsed.siteData);
+          setProjects(parsed.projectsData);
+          if (parsed.experienceData) setExperience(parsed.experienceData);
+          if (parsed.galleryData) setGallery(parsed.galleryData);
+          if (parsed.skillsData) setSkills(parsed.skillsData);
+          return;
+        } else {
+          // Stale or legacy cache detected: reset to verified defaults
+          console.info("Admin: Purging stale cache, initializing with verified data version:", DATA_VERSION);
+          setSite(defaultSiteData);
+          setProjects(defaultProjects);
+          setExperience(defaultExperience);
+          setGallery(defaultGallery);
+          setSkills(defaultSkills);
+          const freshData = {
+            siteData: defaultSiteData,
+            projectsData: defaultProjects,
+            experienceData: defaultExperience,
+            galleryData: defaultGallery,
+            skillsData: defaultSkills,
+            version: DATA_VERSION,
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(freshData));
+          return;
+        }
       }
     } catch (e) {}
 
     // 2. Fetch from backend API
-    fetch("/api/admin/content")
+    fetch("/api/admin/content", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (data.siteData) setSite(data.siteData);
@@ -354,12 +418,18 @@ export default function AdminPage() {
       experienceData: experience,
       galleryData: gallery,
       skillsData: skills,
+      version: DATA_VERSION,
     };
 
-    // 1. Instant client-side persistence
+    // 1. Instant client-side persistence & cross-tab real-time dispatch
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(unifiedPayload));
       window.dispatchEvent(new CustomEvent(UPDATE_EVENT, { detail: unifiedPayload }));
+      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+        const ch = new BroadcastChannel(BROADCAST_CHANNEL);
+        ch.postMessage(unifiedPayload);
+        ch.close();
+      }
     } catch (err) {
       console.error("Storage error:", err);
     }
@@ -413,20 +483,61 @@ export default function AdminPage() {
       setGallery(defaultGallery);
       setSkills(defaultSkills);
 
-      localStorage.removeItem(STORAGE_KEY);
+      const freshData = {
+        siteData: defaultSiteData,
+        projectsData: defaultProjects,
+        experienceData: defaultExperience,
+        galleryData: defaultGallery,
+        skillsData: defaultSkills,
+        version: DATA_VERSION,
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(freshData));
       window.dispatchEvent(
         new CustomEvent(UPDATE_EVENT, {
-          detail: {
-            siteData: defaultSiteData,
-            projectsData: defaultProjects,
-            experienceData: defaultExperience,
-            galleryData: defaultGallery,
-            skillsData: defaultSkills,
-          },
+          detail: freshData,
         })
       );
+      if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+        const ch = new BroadcastChannel(BROADCAST_CHANNEL);
+        ch.postMessage(freshData);
+        ch.close();
+      }
       setStatusMessage({ text: "Portfolio restored to verified default configuration.", type: "success" });
     }
+  }
+
+  function handleForceSync() {
+    setSite(defaultSiteData);
+    setProjects(defaultProjects);
+    setExperience(defaultExperience);
+    setGallery(defaultGallery);
+    setSkills(defaultSkills);
+
+    const freshData = {
+      siteData: defaultSiteData,
+      projectsData: defaultProjects,
+      experienceData: defaultExperience,
+      galleryData: defaultGallery,
+      skillsData: defaultSkills,
+      version: DATA_VERSION,
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(freshData));
+    window.dispatchEvent(
+      new CustomEvent(UPDATE_EVENT, {
+        detail: freshData,
+      })
+    );
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      const ch = new BroadcastChannel(BROADCAST_CHANNEL);
+      ch.postMessage(freshData);
+      ch.close();
+    }
+    setStatusMessage({
+      text: "Admin dashboard and live portfolio synchronized simultaneously with verified codebase data!",
+      type: "success",
+    });
   }
 
   function handleSaveGithubToken(tokenVal: string) {
@@ -686,6 +797,15 @@ export default function AdminPage() {
               <ExternalLink className="w-3.5 h-3.5 text-accent" />
               <span>View Live Site</span>
             </Link>
+
+            <button
+              onClick={handleForceSync}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/15 border border-accent/40 hover:border-accent text-xs font-semibold text-accent hover:bg-accent/25 transition-all"
+              title="Synchronize Admin and Public Portfolio simultaneously"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-accent" />
+              <span>Sync All Simultaneously</span>
+            </button>
 
             <button
               onClick={handleExportBackup}
@@ -1205,10 +1325,11 @@ export default function AdminPage() {
                   className="px-3 py-1.5 rounded-lg bg-surface-dark border border-border text-xs font-mono text-text-primary focus:outline-none focus:border-accent"
                 >
                   <option value="ALL">All Categories ({projects.length})</option>
-                  <option value="INFRASTRUCTURE">INFRASTRUCTURE</option>
-                  <option value="BUILDINGS">BUILDINGS</option>
-                  <option value="SURVEYING">SURVEYING</option>
-                  <option value="ACADEMIC">ACADEMIC</option>
+                  {Array.from(new Set(projects.map((p) => p.category))).map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat} ({projects.filter((p) => p.category === cat).length})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -1300,6 +1421,16 @@ export default function AdminPage() {
                       <div>
                         <h3 className="font-bold text-text-primary text-base leading-snug">{proj.title}</h3>
                         <p className="text-xs text-text-muted">{proj.subtitle}</p>
+                        {proj.phases && (
+                          <div className="flex flex-wrap items-center gap-2 pt-1.5 font-mono text-xs">
+                            <span className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 text-[10px] font-semibold">
+                              {proj.phases.length} Execution Phases
+                            </span>
+                            <span className="px-2 py-0.5 rounded bg-sky-950/60 border border-sky-800/40 text-sky-400 text-[10px] font-semibold">
+                              {proj.drawings?.length || 0} Technical Drawings
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -2106,6 +2237,57 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Phases and Drawings overview within editing modal */}
+              {editingProject.phases && editingProject.phases.length > 0 && (
+                <div className="sm:col-span-2 pt-2 border-t border-border/60">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-xs font-bold text-accent uppercase">
+                      Execution Phases &amp; Sub-Works ({editingProject.phases.length})
+                    </span>
+                    <span className="text-[11px] font-mono text-emerald-400">Consolidated</span>
+                  </div>
+                  <div className="space-y-2">
+                    {editingProject.phases.map((ph, phIdx) => (
+                      <div key={phIdx} className="p-2.5 rounded-lg bg-surface-dark border border-border/80 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-accent text-[11px]">
+                            Phase {ph.phaseNumber}: {ph.title}
+                          </span>
+                          <span className="text-[10px] font-mono text-text-muted">{ph.category}</span>
+                        </div>
+                        <p className="text-[11px] text-text-secondary mt-1">{ph.summary}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {editingProject.drawings && editingProject.drawings.length > 0 && (
+                <div className="sm:col-span-2 pt-2 border-t border-border/60">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-xs font-bold text-accent uppercase">
+                      Technical Drawings &amp; CAD Schematics ({editingProject.drawings.length})
+                    </span>
+                    <span className="text-[11px] font-mono text-sky-400">Designated Drawings</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {editingProject.drawings.map((dwg, dwgIdx) => (
+                      <div key={dwgIdx} className="p-2.5 rounded-lg bg-surface-dark border border-border/80 text-xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[10px] font-bold text-sky-400">{dwg.sheetNo || dwg.type}</span>
+                        </div>
+                        <div className="font-bold text-text-primary text-[11px]">{dwg.title}</div>
+                        {dwg.image && (
+                          <div className="w-full h-16 rounded overflow-hidden bg-black/40 border border-border/60">
+                            <img src={dwg.image} alt={dwg.title} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/80">

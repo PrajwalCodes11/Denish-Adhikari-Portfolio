@@ -24,14 +24,16 @@ function isAuthenticated(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  // Allow fetching current state
-  return NextResponse.json({
+  // Allow fetching current state with strict no-store so client never receives stale cached data
+  const response = NextResponse.json({
     siteData,
     projects: projectsData,
     experience: experienceData,
     skills: skillsData,
     gallery: galleryData,
   });
+  response.headers.set("Cache-Control", "no-store, max-age=0, must-revalidate");
+  return response;
 }
 
 export async function POST(request: NextRequest) {
